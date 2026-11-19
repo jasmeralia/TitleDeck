@@ -1,5 +1,2064 @@
+/*
+marked 18.1.1
+# License information
+
+## Contribution License Agreement
+
+If you contribute code to this project, you are implicitly allowing your code
+to be distributed under the MIT license. You are also implicitly verifying that
+all code is your original work. `</legalese>`
+
+## Marked
+
+Copyright (c) 2018+, MarkedJS (https://github.com/markedjs/)
+Copyright (c) 2011-2018, Christopher Jeffrey (https://github.com/chjj/)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+
+## Markdown
+
+Copyright © 2004, John Gruber
+http://daringfireball.net/
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+
+* Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+* Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+* Neither the name “Markdown” nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+
+This software is provided by the copyright holders and contributors “as is” and any express or implied warranties, including, but not limited to, the implied warranties of merchantability and fitness for a particular purpose are disclaimed. In no event shall the copyright owner or contributors be liable for any direct, indirect, incidental, special, exemplary, or consequential damages (including, but not limited to, procurement of substitute goods or services; loss of use, data, or profits; or business interruption) however caused and on any theory of liability, whether in contract, strict liability, or tort (including negligence or otherwise) arising in any way out of the use of this software, even if advised of the possibility of such damage.
+
+entities 9.0.0
+Copyright (c) Felix Böhm
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+
+Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+
+Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+
+THIS IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS,
+EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+var titleDeckMarkdown = (() => {
+  var __defProp = Object.defineProperty;
+  var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+  var __getOwnPropNames = Object.getOwnPropertyNames;
+  var __hasOwnProp = Object.prototype.hasOwnProperty;
+  var __export = (target, all) => {
+    for (var name in all)
+      __defProp(target, name, { get: all[name], enumerable: true });
+  };
+  var __copyProps = (to, from, except, desc) => {
+    if (from && typeof from === "object" || typeof from === "function") {
+      for (let key of __getOwnPropNames(from))
+        if (!__hasOwnProp.call(to, key) && key !== except)
+          __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+    }
+    return to;
+  };
+  var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+
+  // src/description-markdown.js
+  var description_markdown_exports = {};
+  __export(description_markdown_exports, {
+    clearDescriptionLinkNavigation: () => clearDescriptionLinkNavigation,
+    descriptionLink: () => descriptionLink,
+    descriptionPlainText: () => descriptionPlainText,
+    markdownPreview: () => markdownPreview,
+    paintDescription: () => paintDescription,
+    parseDescriptionMarkdown: () => parseDescriptionMarkdown,
+    updateDescriptionLinkNavigation: () => updateDescriptionLinkNavigation
+  });
+
+  // node_modules/entities/dist/decode-codepoint.js
+  var c1 = [
+    8364,
+    0,
+    8218,
+    402,
+    8222,
+    8230,
+    8224,
+    8225,
+    710,
+    8240,
+    352,
+    8249,
+    338,
+    0,
+    381,
+    0,
+    0,
+    8216,
+    8217,
+    8220,
+    8221,
+    8226,
+    8211,
+    8212,
+    732,
+    8482,
+    353,
+    8250,
+    339,
+    0,
+    382,
+    376
+  ];
+  function isInvalidCodePoint(codePoint) {
+    return codePoint === 0 || codePoint >= 55296 && codePoint <= 57343 || codePoint > 1114111;
+  }
+  function replaceCodePoint(codePoint) {
+    if (isInvalidCodePoint(codePoint)) {
+      return 65533;
+    }
+    if (codePoint >= 128 && codePoint <= 159) {
+      return c1[codePoint - 128] || codePoint;
+    }
+    return codePoint;
+  }
+  function codePointToString(codePoint) {
+    return codePoint - 1 >>> 0 < 127 || codePoint - 160 >>> 0 < 55136 ? String.fromCharCode(codePoint) : String.fromCodePoint(replaceCodePoint(codePoint));
+  }
+
+  // node_modules/entities/dist/generated/decode-data-html.js
+  var htmlDecodeData = ["Q=\xA8`p0AEligMPacutebrevecircyfrgravelphamacrndogonpfpplyFunctionringscrsigntildeumlBackslashrvwedcyecausernoullistafropfrevescrumpeqCHcyOPYacutepitalDifferentialDyleyscaronedilirconintdotedillanterDotfrhiircleDotMinusPlusTimeslockwiseContourIntegralseCurlyDoubleQuoteQuoteolonengruentinttourIntegralpfroductunterClockwiseContourIntegralrossscrupCapDDotrahdJcyScyZcyaggerrrshvcaronyeltafriacriticalAcuteDotubleAcuteGraveTildemondfferentialDopftDotEqualubleContourIntegralDotwnArrowLeftArrowRightArrowTeeongLeftArrowRightArrowRightArrowRightArrowTeeUpArrowDownArrowVerticalBarwnArrowBarUpArrowBreveLeftRightVectorTeeVectorVectorBarRightTeeVectorVectorBarTeeArrowarrowscrtrokENGTHacutecaronircydotfrgravelementmacrptySmallSquareVerySmallSquareogonpfpsilonqualTildeilibriumscrimtaumlxistsponentialEFcyfrilledSmallSquareVerySmallSquareopfrAlluriertrfscrGJcyTammadbrevecedilircydotfrgopfreaterEqualLessFullEqualGreaterLessSlantEqualTildescrtHARDcyacektcircfrilbertSpaceopfrizontalLinescrtrokumpDownHumpEqualIEcyJligOcyacutecircydotfrgravemacrginaryIpliesntegralrsectionvisibleCommaTimesogonpftascrtildeukcymlJcircyfropfscrercyukcyKHcyJcyappacedilyfropfscrLJcyTacutembdangplacetrfrrcaronedilyeftAngleBracketrrowBarRightArrowCeilingDoubleBracketwnTeeVectorVectorBarFloorRightArrowVectorTeeArrowVectorriangleBarEqualUpDownVectorTeeVectorVectorBarVectorBararrowrightarrowssEqualGreaterFullEqualGreaterLessSlantEqualTildefrleftarrowmidotongLeftArrowRightArrowRightArrowleftarrowrightarrowrightarrowpfwerLeftArrowRightArrowscrhtroktMapcyediumSpacellintrffrinusPlusopfscruNJcyacutecaronedilyegativeMediumSpaceThickSpacenSpaceVeryThinSpacestedGreaterGreaterLessLesswLinefroBreaknBreakingSpacepftCongruentupCapDoubleVerticalBarElementqualTildexistsGreaterEqualFullEqualGreaterLessSlantEqualTildeHumpDownHumpEqualLeftTriangleBarEqualssEqualGreaterLessSlantEqualTildeNestedGreaterGreaterLessLessPrecedesEqualSlantEqualReverseElementightTriangleBarEqualSquareSubsetEqualpersetEqualubsetEqualcceedsEqualSlantEqualTildepersetEqualTildeEqualFullEqualTildeVerticalBarscrtildeuOEligacutecircydblacfrgravemacregaicronopfpenCurlyDoubleQuoteQuoterscrlashtildemesumlverBarraceketParenthesisPartialDcyfrhiilusMinusoincareplanepfrecedesEqualSlantEqualTildeimeoductportionalscriQUOTfropfscrRBarrEGacutengrrtlcaronedilyeverseElementquilibriumUpEquilibriumfrhoightAngleBracketrrowBarLeftArrowCeilingDoubleBracketwnTeeVectorVectorBarFloorTeeArrowVectorriangleBarEqualUpDownVectorTeeVectorVectorBarVectorBararrowopfundImpliesrightarrowscrhuleDelayedSHCHcycyOFTcyacutecaronedilircyfrhortDownArrowLeftArrowRightArrowUpArrowigmamallCircleopfqrtuareIntersectionSubsetEqualpersetEqualUnionscrtarubsetEqualcceedsEqualSlantEqualTildehThatmpersetEqualsetTHORNRADESHcycyabucaronedilyfrhereforetaickSpacenSpaceildeEqualFullEqualTildeopfripleDotscrtrokUacuterrocirbrcyevecircydblacfrgravemacrnderBarraceketParenthesisionPlusogonpfpArrowBarDownArrowDownArrowEquilibriumTeeArrowarrowdownarrowperLeftArrowRightArrowsilonringscrtildeumlVDashbarcydashleerbarticalBarLineSeparatorTildeyThinSpacefropfscrvdashWcircedgefropfscrXfriopfscrYAcyIcyUcyacutecircyfropfscrumlZHcyacutecaronydoteroWidthSpacetafropfscraacutebrevecEdircuteyeligfrgravelefsymphphamacrlgpndanddslopevgelemsdaabcdefghrtvbdsphtzarrogonpfpEacireidosproxeqringscrtympeqtildeumlwconintintbNotackcongepsilonprimesimeqrveewedgebrktbrkcongydquoecausemptyvpsirnoutahweenfrigcapircupodotplustimessqcuptartriangledownupuplusveewedgekarowlacklozengesquaretriangledownleftrightnkk12434ocknequivotopfttomwtiexDLRlrHDUduULRlrVHLRhlrboxdLRlrhDUduminusplustimesuLRlrvHLRhlrprimerevevbarscremiimeolbhsubulletmpEeqcacutepandbrcupcapupdotsretoncapsronedilircupssmdotedilmptyvnterdotfrhcyeckmarkiirEceqlearrowleftrightdRSastcircdashefnintmidscirlubsuitoloneqmmatpfnlementxesngdotintpfrodysrrarrossscrubepetdotudarrlreprsclarrppbrcapcapupdotorsrarrmlyeqprecsuccveewedgerenvearrowleftrightveewedwconintintylctydArrHaraggerlethrrshvbkarowlaccaronydaggerrrotseqegltamptyvfishtrharlriamondsuitsegammasinvideontimesonxjcylcornropollarpfteqdotminusplussquareublebarwedgewnarrowdownarrowsharpoonleftrightrbkarowcornropscryoltroktdotrifuarrharwanglezcyigrarreDDototacutestercaronircolonydotefDotrgravesdotlinterslsdotmacrptysetvsp134ngspogonpfparsllussilonvqcircolonsimlantgtrlessualsestivDDvparslrDotarrscrdotimtahumlroxclistpectationonentialefallingdotseqcyemalefiligligligriligjliglatligtnsnofopfrallkvpartintrac123456823534584556878slownscrgElacutemmadpbrevecircydotelqqslantsccdotollesfrggimeljcylEajnEapproxeqqsimopfravescrimeltccirdotlParquestrapproxrrdoteqlessqlesslesssimvertneqqnEhArrairsplfmiltrdcyrcirwbarcirceartsuitlliprconfrksearowwarowoarrmthtokleftarrowrightarrowpfrbarscrlashtrokybullpheniacutecircyecyxclffrgraveiiintntnfinotajligmacrgelinepartthofpedncarefintieodottcalegersrcallarhkprodocygonpftaprodquestscrinEdotsvvtildeukcymljcircyfrmathopfscrercyukcykappavcedilyfrgreenhcyjcyopfscrlAarrrrtailBarrEgHaracuteemptyvgranmbdangdlepquorrbfsfshklpplsimtltailesbarrbrkracekkeslducaronedililubydcaquorrdharusharsheftarrowtailharpoondownupleftarrowsrightarrowsharpoonssquigarrowthreetimesgqqslantsccdotorgessapproxdoteqgtrqgtrgtrsimfishtloorrgEhardulblkjcylarrcornerhardtrimidotoustachenEapproxeqqsimoangrrbrkngleftarrowrightarrowmapstorightarrowoparrowleftrightparflustimeswastbarzengefparltrarrcornerhardmtrisaquocrhimegqbuortroktccirdothreeimeslarrquestrPariefurdsharuharvertneqqnEmDDotacrletesepstodownleftuprkercommaydasheasuredanglefrhoicrodastcirdotnusbdulcpdrnplusodelspfpscrtposultimapmapnGgtvLeftarrowrightarrowltvRightarrowVDashdashablacutengpEidosproxturalsbspumpecapronedilongdotupydasheArrarhkrowdotquivsearimxistsfrgEeqqslantssimtrhArrarrparisdvjcylArrEarrdreftarrowrightarrowqqslantsssimtriemidopftinEdotvabcnivabcparallelsltolintrcueeceqrArrarrcwightarrowtriesccueerhortmidparallelimeqmidparqsubepeubEeseteqqcceqpEeseteqqtglildelgrianglelefteqrightequmerospvDashHarrapdashgetinfinlArretrierArrtriesimwArrarhkrownearoSacutestcircydashblacivotsoldeligfcirrgonravethbarmintlarrcirrossinetmacregaicrondnusopfparerplusrarrderoffmigoforslopevscrlasholtildemesasumlvbarparallelsimltcyercntiodmilptenkfrhivmmatoneitchforkvlanckhkvusacirbcirdouemnsimtwomointintpfundrEapcueecapproxcurlyeqeqnapproxeqqsimsimimesnEapsimodfalarlinesurfptosimurelscriuncspqfrintopfprimescruaternionsintesteqotrAarrrrtailBarrHaraceutedicemptyvngdelequorrapbfscfshklpplsimtlwtailionalsbarrbrkracekkeslducaronedililubydcaldharquorshealinepartsctgfishtloorrhardulovightarrowtailharpoondownupleftarrowsharpoonsrightarrowssquigarrowthreetimesngsingdotseqlarrharmmoustachenmidoangrrbrkparflustimespargtpolintrarrsaquocrhqbuorthreeimesriefltriuluharxsacutebquocEaproncueedilircnEapsimpolintsimydotbeeArrarhkrowctmiswartminusnxtfrownharpchcyyortmidparallelyigmafvmdoteqgElEneplusrarrlarrmallsetminusshpeparslidletesoftcylbarpfpadesuitrqcapsupssubeseteqpesetequareffrarrscretmnmiletarftarfraightepsilonphinsubEdotedotmultnEeplusrarrseteqqneqqimubpccapproxcurlyeqeqnapproxeqqsimsimmngp123EdotsubedothsolublarrmultnEeplusseteqqneqqimubpwArrarhkrownwarzligtargetubrkcaronedilydotelrecfrhere4foretasymvickapproxsimnspkapsimornildemesbardntoeapbotcirforksaprimeradeiangledownlefteqqrighteqdoteminusplussbtimepeziumscryhcytrokwixtoheadleftarrowrightarrowuArrHaracuterrbrcyevecircydarrblacharfishtrgraveharlrblklcornerroptrimacrlogonpfparrowdownarrowharpoonleftrightlussihlonuparrowsrcornerropingtriscrtdotilderifuarrmlwanglevArrBarvDashangrtrepsilonkappanothingphiiroptorhosigmaubsetneqqpsetneqqthetariangleleftrightcydasheebareqlliprbartfrltrinsubpopfproprtriscrubnEepnEezigzagwcircedbargeqierpfropfpreathscrxcapircupdtrifrhArrarrilArrarrmapnisodotpflustimerArrarrscrqcupuplustriveewedgeyacuteycircyenfricyopfscrucymlzacutecaronydoteetrftafrhcyigrarropfscrwjnjC(D%D($(D'%$$ED($'$'$%$'%E$/D'$F%'D(D&#,%%&&$%$)%+%%$E$F$'$&$(#'D&$(%$&4%($(E'%&%($&$)%*$%$%$+)()')($:&5-($'($%*&&&/%%&)%@$'$F$%&&#%%)$&$&$&$(%%%&$(%$$%&%$E$2.&0,.(.(&'%.$F%$&&&(%6)&+*),---&*/1---)-.&)*+,).%*,&,*'('2+,+)1&'1,)2&'&*('($F%'#&D%D($(E&%$$&$ED($)$'%1(2$'%E$)$'((&+$&%%$%D&$(%-#&$E$3)2$F%'%+$&#'D$$'($$($(%&%$$&$E$$$F$./'*,***'*-*($F$$#)$'%$$'$%$.$&%/$&%'$.'(#'$'$&D(D'%$$&$%D($$%&&*%($%&('+%/,($'%E%%$&$($'E%#(%$$E$F$F%'$'#'$&$'$(%$$E$F$F#'D$$(%'%%%+%%$(%'%$$2(',&,-'*'0).+)1&'('-,)'&*(*)(*/&/('/),))/&')-&'('-%1','*'''-'($E$$%+$($/+-'-',+-'-%E%/(-$&%$%'$$#&$%$-%*$E$+$F$&$$#'$($(%'%$$5+-.)+0%5)+%($E$)%1%%%$&,'(&4&*''+H'(&*-(-L-J-'-M-(&O*H&/2F2((%*(***G*M*(&W,K&+.H.-&1'/3F3(&O2(.I4('H,(().H.-.H(I.(&(+(+,+(&.$FD($$#(D(D'%$$($ED($'%&%($F$6,($$$FE'D(&&D&$)('+&'.#+$%$E$%$$$+$/%%$$%)+(+-+(%&%(&*-%$F%$C'$E$&$F#(D%$(%%%%'%$(%'%$$$%/+-*0$%$%$3)'-&-,(*(0*.,)2&(((&+(+))*0&0((/*,*)0&().&(($&%-$-$&%$$-#)%%$($($$%'%'%&%$$E$0(,(-(*$'$-$F$&%')/))/(+)1()($F$&$%&&)(%)+(+-+(&(%$%$&(+(&&C($'$'%%$%%$$(%'%$$E$+&%%K&)$'(((,(($F$+$F%'C)%%''$'&&D'%$$($ED($'$*)',&(.%&('$'%E$)*&*,%,%.%&((%(%,%/(-%%'&$'$F$(D&#($&$%$'($$%%'&$'*+'+,+(&-$E$F$F$(#($'$E$F$F#F$$$F$F#'$&$&D($'%$$E$F$F$&#'$($(%$$&$0%%$%$&$FC)$($$%D%$E&E&%$D'$$%DD($)&%%&$'&%E$$%&&&$&(&$%$&$&%&&)%*$*$*$*$*$*$*$&%(%*$&&'$&'$'%E$$%$%'%$%%%%%')%D'$F%$%&(%D(D&$*%&#'$*'*'('&*%%'&&)%$&''$'%$$'$()$%(%&%'%%&$&'$E$('&'%&''''(&('&&/.%&(&&&($($.()(+0'0'0(&%%&'$&%%&$E&G%%$F%$&&%'%&'$'$'$&$'$'$'$'$&%'$'$'$&$'$'$'$'$'$'$&&&%'$'$'$&$'$'$'$'$&(&'&(&%'$'$'$&$'$'$'$'$'$'$$($'E'$F%&%%'$%%'$''$&'%%%'$'$($#)%$&&&(&&'%&&&D%&&%$'&&E'%&%&(%$&D'%(E%'($E$&%&('%$$%&$&$'%'..()%*$*&*'*'&$&(&&&'$'(&$'($)$%&($&$'%'))&%%'&&&%E&&F$'%$'%&$F%%'$&$'$$'$))$%&&%%')$%$&(&&'%&&&%&D%')$&+*'(&((F&&.-(%&%&$*%&$(#'$&$(%'%%%%'$$)%&$(%$$$%(&%%(D%%&%($(%D$''$$&'&*''$%$%(%&%$F&)*&&$&$(&&$(%E%$&%(&&(&'&)%/%*'-'..($*%'&&$F&$%%%'$'%%'$$'%&$)$&%)#(%%D(%'$(%%G$%'%$$&$$$'%D$$E'%$&&$$%)%$%$&&$'%&(&($%%'%($$%%%$'%E$&'%%&%%'&'$$(&'%&&**'%'&&&%(%%)$'%&$&%&%%$%E$D&%%$&%&%,&,#0$%$($(%&&&%D$'$G$&%&%&$&$F%'&$'$$*D(($H$($($($'%($G%($($'%'%($'%&%%&$F#%%$$(%&($%$$($'%$$&$$%$%$&$&(%$&%&&)$*$&D'%$E$$%$$'$&$$%$%$%$$%%%''%$&$'$%&$F$'$&%%'$'$D$%%&%%&%'%(%*'%&&&)((&'&&$K%E#'$(%%%'%'&$'&'$$&$'$()&%'%'$E$*&($'%'%.'-%E%'$F%'%'$(%'C)$$E&%$$&E&$%%DD($$%'&%%'%&$'$'&%''''&%%%%&$$%'%&(&%'%$&&&(''&(&'$&%&%E%%$'D($F%%'$'&'$($'$$$%'$'E%#(%$$E$'$F$F%'$'#(($$(%$$E$($&$&$F$F#(%%%'$'$$%$$&$(%)%'%'%%'$'%%$E&%%'$(%'%'%'%'%'&'%%$&&&$'D$'%&%'($&%'&)$$(%'&%%%%$$&%&($%(&(%%$$%*,''..%'-'-1$,+,-'-%$%$&$&(%$&%&&)$*$&D'%&*'&'()''&'&$(%'%D$$%$$''$($%&$&$$%&%)%'%&$(%')'$%%%''%$&$'$%&$'&%%&%.+-')'-%.,(%&&D&&%(%'&&%$&'&$$&'%$'%)%&($%$%&$(%E%$%%'$'$%%&%($%'D$%%&%%&%'%'%'%(%'&$'$'$$*&'$K%E#(D&%%&$'&%$&&)')')%%'$(%$$'$/$E$%D'%$&&&&F&%&($($)$$&%%$($(%E$$$F%'$$%)%&#F%D&D$,(-%D%D&D$-$(%'$'%'%E%$&D&E&%&'%&(%*$D&%F(D$&&&%'%&(F%%%$$'$$%&%''$(%%F%'%'&E%')$$E$E%$&$'D'H&D%&%$&$$'%&%&$$%$&$%$$&$'%D%&%%%$&*(-&$'D'H&D'$%&%$&%($$&$FE$&%(D(F(%)$)$&%(%)$)$$&'('E'D%(%$&&&D'$(E$'%&(D(D%,%&($$%&&&D&D%*)+%%'$($%&%&%((%%%'D'$'F*%,D&%(E&$'D'$'F*%,D$&E'%%%.0%,(1%$$%$&&&%$(%'%E%'%E&D%(%'&D&D'F%'&G%F$'%''$(%%'#%D(%%$&G$%$$'%'%%%%%'$'$'%D$&E'%$$'%$$&$'%&&'%&%$$'%&%(&$&&$F$&%&%&$$%&%$&%(%F$F$%'%%%(%$$&E'%%D(&&)%D&$'#&F$''&&'$&$$%$(&&&&&$&'$E$%&$%'%&$$%*%$$()$'%%%'''$'&'%($'$G%'&'&$$$*%EE&$$%$%%%&%$&$')'*'%'*(&(&'&%&($%%&%&&%%&(''''&$'%%&%'$F%$$(#F$&$F$($F$-'&%&(%E%#(%%%'$'$&$F&&%&%)%%'$'$'%E&%%'%'$(%'$'%'%'%'%'&'%'$%'&%('$'%&%'($&%'&)$$(%'&%%%%$$&%(%&($%%$&'&'''$%%E$$(%'%D$''$($%$&$$,-'(./%(-,+(.(-(-%%%-$'%&%$$()'$'$'&%%&%&&D&&%($&'%%)$'$(%E%$%%&%($$(%'%%'$'$''$)$$#)$'$$%$%%&&%&%$&&%&%%&%&&%)%&%$$&'$'$$'%''$(%E%%%%'%)'$%%$E&&$'%'&$%)(+E$$'($($%$&&&$'$&$'$&$'$&%&'&'$'$/&&%)%%&%%$&$'D$(%$&$'%%E$()&&$$'(D&%(D%&($(&+%'$($(&+%%$&&($&$$'$F%'%'%'$&'$%0+&&%$%&$&&&$'&&'&%'$&'&'&&)%+$)&,$'%'%($%%')'*'%'*(&(&'&%$%%%$F$F$F$&$&&'&&$'&&'(%&'&'&%'$&'&&)%+$)&,$'%'%($$'%''$(%%'D'#)%$$&$(%'%$$&$($E$(('&%(&($%,(&&&%&&&E&$'E&($)%($%%$&%$&&&&&D'&%%$($'%)+'+'/%+$+(0%&&&$&(&'&%&'%)$F&$%&%'$'%1*-#'$&D(%%$'&&D'%$$'%'%&$(%DD($''$%&$()%&&%&$'E$$'%E$)%,%.,(%&%%'$'&%+$()%&&%&%&$F$'%'%%'$$'E%$)#'$&'$$'$(%+&(&*&&'$'(&$'%&('K/D(J/D&('..($%$'$%&&&%%'%'&$$E$'$G'D$F$'$'$F%G(D&F(D$)#($(&%($%'$E$F$$$$%'$F#'%&%%$'$E$'%&$$$'%&$&$&$'%E&&%'$'%&$F%'$(%&$&$(C)&$$'%$D%$E$&$F$F$&E%#)$(%$$&$(%%$E$&$)$F$F$%%%0@0000H8H40H000047P00P@001000@0B0HP@:H9T8P000LB8d@800@I0<110000QQ8400P10030005940@410020000Q02000@0200000@P0101@8000440400000000808000000000@00000000P`0000000040400@0004<000000000008000030000000000P020T400020@0@00000000000000000000000000P0000000400400000400220080000100000000000000000P000000000000P000000@00402000000000@00000000000000000000040000000000000", '\xC6&\xC1\u0102\xC2\u0410\u{1D504}\xC0\u0391\u0100\u2A53\u0104\u{1D538}\u2061\xC5\u{1D49C}\u2254\xC3\xC4\u2216\u2AE7\u2306\u0411\u2235\u212C\u0392\u{1D505}\u{1D539}\u02D8\u212C\u224E\u0427\xA9\u0106\u22D2\u2145\u212D\u010C\xC7\u0108\u2230\u010A\xB8\xB7\u212D\u03A7\u2299\u2296\u2295\u2297\u2232\u201D\u2019\u2237\u2A74\u2261\u222F\u222E\u2102\u2210\u2233\u2A2F\u{1D49E}\u22D3\u224D\u2145\u2911\u0402\u0405\u040F\u2021\u21A1\u2AE4\u010E\u0414\u2207\u0394\u{1D507}\xB4\u02D9\u02DD`\u02DC\u22C4\u2146\u{1D53B}\xA8\u20DC\u2250\u222F\xA8\u21D3\u21D0\u21D4\u2AE4\u27F8\u27FA\u27F9\u21D2\u22A8\u21D1\u21D5\u2225\u2193\u2913\u21F5\u0311\u2950\u295E\u21BD\u2956\u295F\u21C1\u2957\u22A4\u21A7\u21D3\u{1D49F}\u0110\u014A\xD0\xC9\u011A\xCA\u042D\u0116\u{1D508}\xC8\u2208\u0112\u25FB\u25AB\u0118\u{1D53C}\u0395\u2A75\u2242\u21CC\u2130\u2A73\u0397\xCB\u2203\u2147\u0424\u{1D509}\u25FC\u25AA\u{1D53D}\u2200\u2131\u2131\u0403>\u0393\u03DC\u011E\u0122\u011C\u0413\u0120\u{1D50A}\u22D9\u{1D53E}\u2265\u22DB\u2267\u2AA2\u2277\u2A7E\u2273\u{1D4A2}\u226B\u042A\u02C7^\u0124\u210C\u210B\u210D\u2500\u210B\u0126\u224E\u224F\u0415\u0132\u0401\xCD\xCE\u0418\u0130\u2111\xCC\u2111\u012A\u2148\u21D2\u222C\u222B\u22C2\u2063\u2062\u012E\u{1D540}\u0399\u2110\u0128\u0406\xCF\u0134\u0419\u{1D50D}\u{1D541}\u{1D4A5}\u0408\u0404\u0425\u040C\u039A\u0136\u041A\u{1D50E}\u{1D542}\u{1D4A6}\u0409<\u0139\u039B\u27EA\u2112\u219E\u013D\u013B\u041B\u27E8\u2190\u21E4\u21C6\u2308\u27E6\u2961\u21C3\u2959\u230A\u2194\u294E\u22A3\u21A4\u295A\u22B2\u29CF\u22B4\u2951\u2960\u21BF\u2958\u21BC\u2952\u21D0\u21D4\u22DA\u2266\u2276\u2AA1\u2A7D\u2272\u{1D50F}\u22D8\u21DA\u013F\u27F5\u27F7\u27F6\u27F8\u27FA\u27F9\u{1D543}\u2199\u2198\u2112\u21B0\u0141\u226A\u2905\u041C\u205F\u2133\u{1D510}\u2213\u{1D544}\u2133\u039C\u040A\u0143\u0147\u0145\u041D\u200B\u200B\u200B\u200B\u226B\u226A\n\u{1D511}\u2060\xA0\u2115\u2AEC\u2262\u226D\u2226\u2209\u2260\u2242\u0338\u2204\u226F\u2271\u2267\u0338\u226B\u0338\u2279\u2A7E\u0338\u2275\u224E\u0338\u224F\u0338\u22EA\u29CF\u0338\u22EC\u226E\u2270\u2278\u226A\u0338\u2A7D\u0338\u2274\u2AA2\u0338\u2AA1\u0338\u2280\u2AAF\u0338\u22E0\u220C\u22EB\u29D0\u0338\u22ED\u228F\u0338\u22E2\u2290\u0338\u22E3\u2282\u20D2\u2288\u2281\u2AB0\u0338\u22E1\u227F\u0338\u2283\u20D2\u2289\u2241\u2244\u2247\u2249\u2224\u{1D4A9}\xD1\u039D\u0152\xD3\xD4\u041E\u0150\u{1D512}\xD2\u014C\u03A9\u039F\u{1D546}\u201C\u2018\u2A54\u{1D4AA}\xD8\xD5\u2A37\xD6\u203E\u23DE\u23B4\u23DC\u2202\u041F\u{1D513}\u03A6\u03A0\xB1\u210C\u2119\u2ABB\u227A\u2AAF\u227C\u227E\u2033\u220F\u2237\u221D\u{1D4AB}\u03A8"\u{1D514}\u211A\u{1D4AC}\u2910\xAE\u0154\u27EB\u21A0\u2916\u0158\u0156\u0420\u211C\u220B\u21CB\u296F\u211C\u03A1\u27E9\u2192\u21E5\u21C4\u2309\u27E7\u295D\u21C2\u2955\u230B\u22A2\u21A6\u295B\u22B3\u29D0\u22B5\u294F\u295C\u21BE\u2954\u21C0\u2953\u21D2\u211D\u2970\u21DB\u211B\u21B1\u29F4\u0429\u0428\u042C\u015A\u2ABC\u0160\u015E\u015C\u0421\u{1D516}\u2193\u2190\u2192\u2191\u03A3\u2218\u{1D54A}\u221A\u25A1\u2293\u228F\u2291\u2290\u2292\u2294\u{1D4AE}\u22C6\u22D0\u22D0\u2286\u227B\u2AB0\u227D\u227F\u220B\u2211\u22D1\u2283\u2287\u22D1\xDE\u2122\u040B\u0426	\u03A4\u0164\u0162\u0422\u{1D517}\u2234\u0398\u205F\u200A\u2009\u223C\u2243\u2245\u2248\u{1D54B}\u20DB\u{1D4AF}\u0166\xDA\u219F\u2949\u040E\u016C\xDB\u0423\u0170\u{1D518}\xD9\u016A_\u23DF\u23B5\u23DD\u22C3\u228E\u0172\u{1D54C}\u2191\u2912\u21C5\u2195\u296E\u22A5\u21A5\u21D1\u21D5\u2196\u2197\u03D2\u03A5\u016E\u{1D4B0}\u0168\xDC\u22AB\u2AEB\u0412\u22A9\u2AE6\u22C1\u2016\u2016\u2223|\u2758\u2240\u200A\u{1D519}\u{1D54D}\u{1D4B1}\u22AA\u0174\u22C0\u{1D51A}\u{1D54E}\u{1D4B2}\u{1D51B}\u039E\u{1D54F}\u{1D4B3}\u042F\u0407\u042E\xDD\u0176\u042B\u{1D51C}\u{1D550}\u{1D4B4}\u0178\u0416\u0179\u017D\u0417\u017B\u200B\u0396\u2128\u2124\u{1D4B5}\xE1\u0103\u223E\u223E\u0333\u223F\xE2\xB4\u0430\xE6\u2061\u{1D51E}\xE0\u2135\u2135\u03B1\u0101\u2A3F&\u2227\u2A55\u2A5C\u2A58\u2A5A\u2220\u29A4\u2220\u2221\u29A8\u29A9\u29AA\u29AB\u29AC\u29AD\u29AE\u29AF\u221F\u22BE\u299D\u2222\xC5\u237C\u0105\u{1D552}\u2248\u2A70\u2A6F\u224A\u224B\'\u2248\u224A\xE5\u{1D4B6}*\u2248\u224D\xE3\xE4\u2233\u2A11\u2AED\u224C\u03F6\u2035\u223D\u22CD\u22BD\u2305\u2305\u23B5\u23B6\u224C\u0431\u201E\u2235\u2235\u29B0\u03F6\u212C\u03B2\u2136\u226C\u{1D51F}\u22C2\u25EF\u22C3\u2A00\u2A01\u2A02\u2A06\u2605\u25BD\u25B3\u2A04\u22C1\u22C0\u290D\u29EB\u25AA\u25B4\u25BE\u25C2\u25B8\u2423\u2592\u2591\u2593\u2588=\u20E5\u2261\u20E5\u2310\u{1D553}\u22A5\u22A5\u22C8\u2557\u2554\u2556\u2553\u2550\u2566\u2569\u2564\u2567\u255D\u255A\u255C\u2559\u2551\u256C\u2563\u2560\u256B\u2562\u255F\u29C9\u2555\u2552\u2510\u250C\u2500\u2565\u2568\u252C\u2534\u229F\u229E\u22A0\u255B\u2558\u2518\u2514\u2502\u256A\u2561\u255E\u253C\u2524\u251C\u2035\u02D8\xA6\u{1D4B7}\u204F\u223D\u22CD\\\u29C5\u27C8\u2022\u2022\u224E\u2AAE\u224F\u224F\u0107\u2229\u2A44\u2A49\u2A4B\u2A47\u2A40\u2229\uFE00\u2041\u02C7\u2A4D\u010D\xE7\u0109\u2A4C\u2A50\u010B\xB8\u29B2\xA2\xB7\u{1D520}\u0447\u2713\u2713\u03C7\u25CB\u29C3\u02C6\u2257\u21BA\u21BB\xAE\u24C8\u229B\u229A\u229D\u2257\u2A10\u2AEF\u29C2\u2663\u2663:\u2254\u2254,@\u2201\u2218\u2201\u2102\u2245\u2A6D\u222E\u{1D554}\u2210\xA9\u2117\u21B5\u2717\u{1D4B8}\u2ACF\u2AD1\u2AD0\u2AD2\u22EF\u2938\u2935\u22DE\u22DF\u21B6\u293D\u222A\u2A48\u2A46\u2A4A\u228D\u2A45\u222A\uFE00\u21B7\u293C\u22DE\u22DF\u22CE\u22CF\xA4\u21B6\u21B7\u22CE\u22CF\u2232\u2231\u232D\u21D3\u2965\u2020\u2138\u2193\u2010\u22A3\u290F\u02DD\u010F\u0434\u2146\u2021\u21CA\u2A77\xB0\u03B4\u29B1\u297F\u{1D521}\u21C3\u21C2\u22C4\u22C4\u2666\u2666\xA8\u03DD\u22F2\xF7\xF7\u22C7\u22C7\u0452\u231E\u230D$\u{1D555}\u02D9\u2250\u2251\u2238\u2214\u22A1\u2306\u2193\u21CA\u21C3\u21C2\u2910\u231F\u230C\u{1D4B9}\u0455\u29F6\u0111\u22F1\u25BF\u25BE\u21F5\u296F\u29A6\u045F\u27FF\u2A77\u2251\xE9\u2A6E\u011B\u2256\xEA\u2255\u044D\u0117\u2147\u2252\u{1D522}\u2A9A\xE8\u2A96\u2A98\u2A99\u23E7\u2113\u2A95\u2A97\u0113\u2205\u2205\u2205\u2003\u2004\u2005\u014B\u2002\u0119\u{1D556}\u22D5\u29E3\u2A71\u03B5\u03B5\u03F5\u2256\u2255\u2242\u2A96\u2A95=\u225F\u2261\u2A78\u29E5\u2253\u2971\u212F\u2250\u2242\u03B7\xF0\xEB\u20AC!\u2203\u2130\u2147\u2252\u0444\u2640\uFB03\uFB00\uFB04\u{1D523}\uFB01fj\u266D\uFB02\u25B1\u0192\u{1D557}\u2200\u22D4\u2AD9\u2A0D\xBD\u2153\xBC\u2155\u2159\u215B\u2154\u2156\xBE\u2157\u215C\u2158\u215A\u215D\u215E\u2044\u2322\u{1D4BB}\u2267\u2A8C\u01F5\u03B3\u03DD\u2A86\u011F\u011D\u0433\u0121\u2265\u22DB\u2265\u2267\u2A7E\u2A7E\u2AA9\u2A80\u2A82\u2A84\u22DB\uFE00\u2A94\u{1D524}\u226B\u22D9\u2137\u0453\u2277\u2A92\u2AA5\u2AA4\u2269\u2A8A\u2A8A\u2A88\u2A88\u2269\u22E7\u{1D558}`\u210A\u2273\u2A8E\u2A90>\u2AA7\u2A7A\u22D7\u2995\u2A7C\u2A86\u2978\u22D7\u22DB\u2A8C\u2277\u2273\u2269\uFE00\u2269\uFE00\u21D4\u200A\xBD\u210B\u044A\u2194\u2948\u21AD\u210F\u0125\u2665\u2665\u2026\u22B9\u{1D525}\u2925\u2926\u21FF\u223B\u21A9\u21AA\u{1D559}\u2015\u{1D4BD}\u210F\u0127\u2043\u2010\xED\u2063\xEE\u0438\u0435\xA1\u21D4\u{1D526}\xEC\u2148\u2A0C\u222D\u29DC\u2129\u0133\u012B\u2111\u2110\u2111\u0131\u22B7\u01B5\u2208\u2105\u221E\u29DD\u0131\u222B\u22BA\u2124\u22BA\u2A17\u2A3C\u0451\u012F\u{1D55A}\u03B9\u2A3C\xBF\u{1D4BE}\u2208\u22F9\u22F5\u22F4\u22F3\u2208\u2062\u0129\u0456\xEF\u0135\u0439\u{1D527}\u0237\u{1D55B}\u{1D4BF}\u0458\u0454\u03BA\u03F0\u0137\u043A\u{1D528}\u0138\u0445\u045C\u{1D55C}\u{1D4C0}\u21DA\u21D0\u291B\u290E\u2266\u2A8B\u2962\u013A\u29B4\u2112\u03BB\u27E8\u2991\u27E8\u2A85\xAB\u2190\u21E4\u291F\u291D\u21A9\u21AB\u2939\u2973\u21A2\u2AAB\u2919\u2AAD\u2AAD\uFE00\u290C\u2772{[\u298B\u298F\u298D\u013E\u013C\u2308{\u043B\u2936\u201C\u201E\u2967\u294B\u21B2\u2264\u2190\u21A2\u21BD\u21BC\u21C7\u2194\u21C6\u21CB\u21AD\u22CB\u22DA\u2264\u2266\u2A7D\u2A7D\u2AA8\u2A7F\u2A81\u2A83\u22DA\uFE00\u2A93\u2A85\u22D6\u22DA\u2A8B\u2276\u2272\u297C\u230A\u{1D529}\u2276\u2A91\u21BD\u21BC\u296A\u2584\u0459\u226A\u21C7\u231E\u296B\u25FA\u0140\u23B0\u23B0\u2268\u2A89\u2A89\u2A87\u2A87\u2268\u22E6\u27EC\u21FD\u27E6\u27F5\u27F7\u27FC\u27F6\u21AB\u21AC\u2985\u{1D55D}\u2A2D\u2A34\u2217_\u25CA\u25CA\u29EB(\u2993\u21C6\u231F\u21CB\u296D\u200E\u22BF\u2039\u{1D4C1}\u21B0\u2272\u2A8D\u2A8F[\u2018\u201A\u0142<\u2AA6\u2A79\u22D6\u22CB\u22C9\u2976\u2A7B\u2996\u25C3\u22B4\u25C2\u294A\u2966\u2268\uFE00\u2268\uFE00\u223A\xAF\u2642\u2720\u2720\u21A6\u21A6\u21A7\u21A4\u21A5\u25AE\u2A29\u043C\u2014\u2221\u{1D52A}\u2127\xB5\u2223*\u2AF0\xB7\u2212\u229F\u2238\u2A2A\u2ADB\u2026\u2213\u22A7\u{1D55E}\u2213\u{1D4C2}\u223E\u03BC\u22B8\u22B8\u22D9\u0338\u226B\u20D2\u226B\u0338\u21CD\u21CE\u22D8\u0338\u226A\u20D2\u226A\u0338\u21CF\u22AF\u22AE\u2207\u0144\u2220\u20D2\u2249\u2A70\u0338\u224B\u0338\u0149\u2249\u266E\u266E\u2115\xA0\u224E\u0338\u224F\u0338\u2A43\u0148\u0146\u2247\u2A6D\u0338\u2A42\u043D\u2013\u2260\u21D7\u2924\u2197\u2197\u2250\u0338\u2262\u2928\u2242\u0338\u2204\u2204\u{1D52B}\u2267\u0338\u2271\u2271\u2267\u0338\u2A7E\u0338\u2A7E\u0338\u2275\u226F\u226F\u21CE\u21AE\u2AF2\u220B\u22FC\u22FA\u220B\u045A\u21CD\u2266\u0338\u219A\u2025\u2270\u219A\u21AE\u2270\u2266\u0338\u2A7D\u0338\u2A7D\u0338\u226E\u2274\u226E\u22EA\u22EC\u2224\u{1D55F}\xAC\u2209\u22F9\u0338\u22F5\u0338\u2209\u22F7\u22F6\u220C\u220C\u22FE\u22FD\u2226\u2226\u2AFD\u20E5\u2202\u0338\u2A14\u2280\u22E0\u2AAF\u0338\u2280\u2AAF\u0338\u21CF\u219B\u2933\u0338\u219D\u0338\u219B\u22EB\u22ED\u2281\u22E1\u2AB0\u0338\u{1D4C3}\u2224\u2226\u2241\u2244\u2244\u2224\u2226\u22E2\u22E3\u2284\u2AC5\u0338\u2288\u2282\u20D2\u2288\u2AC5\u0338\u2281\u2AB0\u0338\u2285\u2AC6\u0338\u2289\u2283\u20D2\u2289\u2AC6\u0338\u2279\xF1\u2278\u22EA\u22EC\u22EB\u22ED\u03BD#\u2116\u2007\u22AD\u2904\u224D\u20D2\u22AC\u2265\u20D2>\u20D2\u29DE\u2902\u2264\u20D2<\u20D2\u22B4\u20D2\u2903\u22B5\u20D2\u223C\u20D2\u21D6\u2923\u2196\u2196\u2927\u24C8\xF3\u229B\u229A\xF4\u043E\u229D\u0151\u2A38\u2299\u29BC\u0153\u29BF\u{1D52C}\u02DB\xF2\u29C1\u29B5\u03A9\u222E\u21BA\u29BE\u29BB\u203E\u29C0\u014D\u03C9\u03BF\u29B6\u2296\u{1D560}\u29B7\u29B9\u2295\u2228\u21BB\u2A5D\u2134\u2134\xAA\xBA\u22B6\u2A56\u2A57\u2A5B\u2134\xF8\u2298\xF5\u2297\u2A36\xF6\u233D\u2225\xB6\u2225\u2AF3\u2AFD\u2202\u043F%.\u2030\u22A5\u2031\u{1D52D}\u03C6\u03D5\u2133\u260E\u03C0\u22D4\u03D6\u210F\u210E\u210F+\u2A23\u229E\u2A22\u2214\u2A25\u2A72\xB1\u2A26\u2A27\xB1\u2A15\u{1D561}\xA3\u227A\u2AB3\u2AB7\u227C\u2AAF\u227A\u2AB7\u227C\u2AAF\u2AB9\u2AB5\u22E8\u227E\u2032\u2119\u2AB5\u2AB9\u22E8\u220F\u232E\u2312\u2313\u221D\u221D\u227E\u22B0\u{1D4C5}\u03C8\u2008\u{1D52E}\u2A0C\u{1D562}\u2057\u{1D4C6}\u210D\u2A16?\u225F"\u21DB\u21D2\u291C\u290F\u2964\u223D\u0331\u0155\u221A\u29B3\u27E9\u2992\u29A5\u27E9\xBB\u2192\u2975\u21E5\u2920\u2933\u291E\u21AA\u21AC\u2945\u2974\u21A3\u219D\u291A\u2236\u211A\u290D\u2773}]\u298C\u298E\u2990\u0159\u0157\u2309}\u0440\u2937\u2969\u201D\u201D\u21B3\u211C\u211B\u211C\u211D\u25AD\xAE\u297D\u230B\u{1D52F}\u21C1\u21C0\u296C\u03C1\u03F1\u2192\u21A3\u21C1\u21C0\u21C4\u21CC\u21C9\u219D\u22CC\u02DA\u2253\u21C4\u21CC\u200F\u23B1\u23B1\u2AEE\u27ED\u21FE\u27E7\u2986\u{1D563}\u2A2E\u2A35)\u2994\u2A12\u21C9\u203A\u{1D4C7}\u21B1]\u2019\u2019\u22CC\u22CA\u25B9\u22B5\u25B8\u29CE\u2968\u211E\u015B\u201A\u227B\u2AB4\u2AB8\u0161\u227D\u2AB0\u015F\u015D\u2AB6\u2ABA\u22E9\u2A13\u227F\u0441\u22C5\u22A1\u2A66\u21D8\u2925\u2198\u2198\xA7;\u2929\u2216\u2216\u2736\u{1D530}\u2322\u266F\u0449\u0448\u2223\u2225\xAD\u03C3\u03C2\u03C2\u223C\u2A6A\u2243\u2243\u2A9E\u2AA0\u2A9D\u2A9F\u2246\u2A24\u2972\u2190\u2216\u2A33\u29E4\u2223\u2323\u2AAA\u2AAC\u2AAC\uFE00\u044C/\u29C4\u233F\u{1D564}\u2660\u2660\u2225\u2293\u2293\uFE00\u2294\u2294\uFE00\u228F\u2291\u228F\u2291\u2290\u2292\u2290\u2292\u25A1\u25A1\u25AA\u25AA\u2192\u{1D4C8}\u2216\u2323\u22C6\u2606\u2605\u03F5\u03D5\xAF\u2282\u2AC5\u2ABD\u2286\u2AC3\u2AC1\u2ACB\u228A\u2ABF\u2979\u2282\u2286\u2AC5\u228A\u2ACB\u2AC7\u2AD5\u2AD3\u227B\u2AB8\u227D\u2AB0\u2ABA\u2AB6\u22E9\u227F\u2211\u266A\u2283\xB9\xB2\xB3\u2AC6\u2ABE\u2AD8\u2287\u2AC4\u27C9\u2AD7\u297B\u2AC2\u2ACC\u228B\u2AC0\u2283\u2287\u2AC6\u228B\u2ACC\u2AC8\u2AD4\u2AD6\u21D9\u2926\u2199\u2199\u292A\xDF\u2316\u03C4\u23B4\u0165\u0163\u0442\u20DB\u2315\u{1D531}\u2234\u2234\u03B8\u03D1\u03D1\u2248\u223C\u2009\u2248\u223C\xFE\u02DC\xD7\u22A0\u2A31\u2A30\u222D\u2928\u22A4\u2336\u2AF1\u{1D565}\u2ADA\u2929\u2034\u2122\u25B5\u25BF\u25C3\u22B4\u225C\u25B9\u22B5\u25EC\u225C\u2A3A\u2A39\u29CD\u2A3B\u23E2\u{1D4C9}\u0446\u045B\u0167\u226C\u219E\u21A0\u21D1\u2963\xFA\u2191\u045E\u016D\xFB\u0443\u21C5\u0171\u296E\u297E\u{1D532}\xF9\u21BF\u21BE\u2580\u231C\u231C\u230F\u25F8\u016B\xA8\u0173\u{1D566}\u2191\u2195\u21BF\u21BE\u228E\u03C5\u03D2\u03C5\u21C8\u231D\u231D\u230E\u016F\u25F9\u{1D4CA}\u22F0\u0169\u25B5\u25B4\u21C8\xFC\u29A7\u21D5\u2AE8\u2AE9\u22A8\u299C\u03F5\u03F0\u2205\u03D5\u03D6\u221D\u2195\u03F1\u03C2\u228A\uFE00\u2ACB\uFE00\u228B\uFE00\u2ACC\uFE00\u03D1\u22B2\u22B3\u0432\u22A2\u2228\u22BB\u225A\u22EE||\u{1D533}\u22B2\u2282\u20D2\u2283\u20D2\u{1D567}\u221D\u22B3\u{1D4CB}\u2ACB\uFE00\u228A\uFE00\u2ACC\uFE00\u228B\uFE00\u299A\u0175\u2A5F\u2227\u2259\u2118\u{1D534}\u{1D568}\u2118\u2240\u2240\u{1D4CC}\u22C2\u25EF\u22C3\u25BD\u{1D535}\u27FA\u27F7\u03BE\u27F8\u27F5\u27FC\u22FB\u2A00\u{1D569}\u2A01\u2A02\u27F9\u27F6\u{1D4CD}\u2A06\u2A04\u25B3\u22C1\u22C0\xFD\u044F\u0177\u044B\xA5\u{1D536}\u0457\u{1D56A}\u{1D4CE}\u044E\xFF\u017A\u017E\u0437\u017C\u2128\u03B6\u{1D537}\u0436\u21DD\u{1D56B}\u{1D4CF}\u200D\u200C'];
+
+  // node_modules/entities/dist/internal/decode-data-format.js
+  var META_BIAS = 35;
+  var HEADER_BIAS = 48;
+  var HEADER_LENGTH = 6;
+  var CHOICE_BITS_PER_CHAR = 6;
+  var BUCKET_HASH_1 = 2654435761;
+  var BUCKET_HASH_2 = 2246822507;
+  var PAIR_TABLE_SIZE = 1024;
+  var CHAR_REMAP = (() => {
+    const remap = new Uint8Array(128);
+    for (let code = 48; code <= 57; code++)
+      remap[code] = code - 47;
+    for (let code = 65; code <= 90; code++)
+      remap[code] = code - 54;
+    for (let code = 97; code <= 122; code++)
+      remap[code] = code - 60;
+    return remap;
+  })();
+  function exactKey(text, nameStart, length) {
+    return text.charCodeAt(nameStart) << 25 | text.charCodeAt(nameStart + 1) << 18 | text.charCodeAt(nameStart + length - 2) << 11 | CHAR_REMAP[text.charCodeAt(nameStart + length - 1)] << 5 | length;
+  }
+  function pairIndex(c0, c12) {
+    return (c0 * 3 << 3 ^ c12) & PAIR_TABLE_SIZE - 1;
+  }
+  function bucketOne(key, buckets) {
+    return (Math.imul(key, BUCKET_HASH_1) >>> 16) * buckets >>> 16;
+  }
+  function bucketTwo(key, buckets) {
+    return (Math.imul(key, BUCKET_HASH_2) >>> 16) * buckets >>> 16;
+  }
+  function initDecodeData(packed) {
+    const [data, values] = packed;
+    const nameCount = data.charCodeAt(0) - HEADER_BIAS << 6 | data.charCodeAt(1) - HEADER_BIAS;
+    const suffixesLength = data.charCodeAt(2) - HEADER_BIAS << 6 | data.charCodeAt(3) - HEADER_BIAS;
+    const buckets = data.charCodeAt(4) - HEADER_BIAS << 6 | data.charCodeAt(5) - HEADER_BIAS;
+    const metaStart = HEADER_LENGTH + suffixesLength;
+    const choicesStart = metaStart + 2 * nameCount;
+    const slotCount = 2 * buckets;
+    const keys = new Int32Array(slotCount);
+    const slotMidOff = new Uint16Array(slotCount);
+    const slotValue = new Uint16Array(slotCount);
+    const lengthBits = new Uint32Array(PAIR_TABLE_SIZE);
+    const middleOffsets = /* @__PURE__ */ new Map();
+    const middles = [];
+    let name = "";
+    let suffixOffset = HEADER_LENGTH;
+    let valueOffset = 0;
+    for (let index = 0; index < nameCount; index++) {
+      const meta0 = data.charCodeAt(metaStart + 2 * index) - META_BIAS;
+      const meta1 = data.charCodeAt(metaStart + 2 * index + 1) - META_BIAS;
+      const prefixLength = meta0 & 31;
+      const length = prefixLength + (meta1 & 31);
+      const valueLength = (meta1 >> 5) + 1;
+      name = name.slice(0, prefixLength) + data.slice(suffixOffset, suffixOffset + length - prefixLength);
+      suffixOffset += length - prefixLength;
+      const key = exactKey(name, 0, length);
+      const choice = data.charCodeAt(choicesStart + Math.floor(index / CHOICE_BITS_PER_CHAR)) - HEADER_BIAS & 1 << index % CHOICE_BITS_PER_CHAR;
+      let slot = 2 * (choice === 0 ? bucketOne : bucketTwo)(key, buckets);
+      if (keys[slot] !== 0)
+        slot += 1;
+      keys[slot] = key;
+      if (length > 4) {
+        const middle = name.slice(2, length - 2);
+        const existing = middleOffsets.get(middle);
+        if (existing === void 0) {
+          middleOffsets.set(middle, middles.length);
+          slotMidOff[slot] = middles.length;
+          for (let middleIndex = 0; middleIndex < middle.length; middleIndex += 2) {
+            middles.push(middle.charCodeAt(middleIndex) | middle.charCodeAt(middleIndex + 1) << 16);
+          }
+        } else {
+          slotMidOff[slot] = existing;
+        }
+      }
+      const pair = pairIndex(name.charCodeAt(0), name.charCodeAt(1));
+      lengthBits[pair] |= length <= 16 ? 1 << length - 2 : 32768;
+      if ((meta0 & 32) !== 0) {
+        lengthBits[pair] |= 1 << length - 2 + 16;
+      }
+      slotValue[slot] = valueOffset << 2 | valueLength - 1 | (meta0 & 32) >> 4;
+      valueOffset += valueLength;
+    }
+    return {
+      keys,
+      buckets,
+      slotMidOff,
+      slotValue,
+      values,
+      lengthBits,
+      middles: new Uint32Array(middles)
+    };
+  }
+
+  // node_modules/entities/dist/decode.js
+  var CHAR_AMP = 38;
+  var CHAR_NUM = 35;
+  var CHAR_SEMI = 59;
+  var CHAR_EQUALS = 61;
+  var CHAR_ZERO = 48;
+  var CHAR_LOWER_A = 97;
+  var CHAR_LOWER_X = 120;
+  var CHAR_UPPER_A = 65;
+  var TO_LOWER_BIT = 32;
+  function isNumber(code) {
+    return code - CHAR_ZERO >>> 0 <= 9;
+  }
+  function isAlphaNumeric(code) {
+    return isNumber(code) || (code | TO_LOWER_BIT) - CHAR_LOWER_A >>> 0 <= 25;
+  }
+  function isEntityInAttributeInvalidEnd(code) {
+    return code === CHAR_EQUALS || isAlphaNumeric(code);
+  }
+  var DecodingMode;
+  (function(DecodingMode2) {
+    DecodingMode2[DecodingMode2["Legacy"] = 0] = "Legacy";
+    DecodingMode2[DecodingMode2["Strict"] = 1] = "Strict";
+    DecodingMode2[DecodingMode2["Attribute"] = 2] = "Attribute";
+  })(DecodingMode || (DecodingMode = {}));
+  var htmlDecode = /* @__PURE__ */ initDecodeData(htmlDecodeData);
+  var htmlKeys = /* @__PURE__ */ (() => htmlDecode.keys)();
+  var htmlBuckets = /* @__PURE__ */ (() => htmlDecode.buckets)();
+  var htmlSlotMidOff = /* @__PURE__ */ (() => htmlDecode.slotMidOff)();
+  var htmlLengthBits = /* @__PURE__ */ (() => htmlDecode.lengthBits)();
+  var htmlMiddles = /* @__PURE__ */ (() => htmlDecode.middles)();
+  var htmlSlotValue = /* @__PURE__ */ (() => htmlDecode.slotValue)();
+  var htmlValues = /* @__PURE__ */ (() => htmlDecode.values)();
+  function emitHtmlValue(packed) {
+    const off = packed >> 2;
+    return (packed & 1) === 0 ? htmlValues.charAt(off) : htmlValues.slice(off, off + (packed & 1) + 1);
+  }
+  function findSlotHtml(text, start, length) {
+    const c0 = text.charCodeAt(start);
+    const c12 = text.charCodeAt(start + 1);
+    const c2 = text.charCodeAt(start + length - 2);
+    const c3 = text.charCodeAt(start + length - 1);
+    if ((c0 | c12 | c2 | c3) > 127)
+      return -1;
+    const key = c0 << 25 | c12 << 18 | c2 << 11 | CHAR_REMAP[c3] << 5 | length;
+    let slot = 2 * ((Math.imul(key, BUCKET_HASH_1) >>> 16) * htmlBuckets >>> 16);
+    for (let attempt = 0; ; attempt++) {
+      if (htmlKeys[slot] === key && (length <= 4 || isMidMatchHtml(slot, text, start, length))) {
+        return slot;
+      }
+      if (htmlKeys[slot + 1] === key && (length <= 4 || isMidMatchHtml(slot + 1, text, start, length))) {
+        return slot + 1;
+      }
+      if (attempt === 1)
+        return -1;
+      slot = 2 * ((Math.imul(key, BUCKET_HASH_2) >>> 16) * htmlBuckets >>> 16);
+    }
+  }
+  function isMidMatchHtml(slot, text, start, length) {
+    let wordIndex = htmlSlotMidOff[slot];
+    let index = start + 2;
+    const end = start + length - 2;
+    while (index + 1 < end) {
+      if ((text.charCodeAt(index) | text.charCodeAt(index + 1) << 16) !== htmlMiddles[wordIndex++])
+        return false;
+      index += 2;
+    }
+    return index === end || text.charCodeAt(index) === (htmlMiddles[wordIndex] & 65535);
+  }
+  var NUMERIC_CONSUMED_SHIFT = 21;
+  var NUMERIC_CODE_POINT_MASK = 2097151;
+  var NUMERIC_CONSUMED_OVERFLOW = 2047;
+  var longNumericConsumed = 0;
+  function unpackConsumed(packed) {
+    const consumed = packed >>> NUMERIC_CONSUMED_SHIFT;
+    return consumed === NUMERIC_CONSUMED_OVERFLOW ? longNumericConsumed : consumed;
+  }
+  var numericDigits = /* @__PURE__ */ (() => {
+    const digits = new Uint8Array(128).fill(255);
+    for (let digit = 0; digit < 10; digit++) {
+      digits[CHAR_ZERO + digit] = digit;
+    }
+    for (let digit = 0; digit < 6; digit++) {
+      digits[CHAR_UPPER_A + digit] = digit + 10;
+      digits[CHAR_LOWER_A + digit] = digit + 10;
+    }
+    return digits;
+  })();
+  function parseNumericEntity(input, offset, isStrict) {
+    const inputLength = input.length;
+    let index = offset;
+    let codePoint = 0;
+    let digitsStart;
+    if ((input.charCodeAt(index) | TO_LOWER_BIT) === CHAR_LOWER_X) {
+      index += 1;
+      digitsStart = index;
+      while (index < inputLength) {
+        const char = input.charCodeAt(index);
+        if (char >= 128)
+          break;
+        const digit = numericDigits[char];
+        if (digit <= 15) {
+          codePoint = codePoint * 16 + digit;
+          index++;
+        } else {
+          break;
+        }
+      }
+    } else {
+      digitsStart = index;
+      while (index < inputLength) {
+        const char = input.charCodeAt(index);
+        if (char >= 128)
+          break;
+        const digit = numericDigits[char];
+        if (digit <= 9) {
+          codePoint = codePoint * 10 + digit;
+          index++;
+        } else {
+          break;
+        }
+      }
+    }
+    if (index === digitsStart)
+      return 0;
+    if (codePoint > 1114111)
+      codePoint = 1114112;
+    let consumed = index - offset + 2;
+    if (index < inputLength && input.charCodeAt(index) === CHAR_SEMI) {
+      consumed += 1;
+    } else if (isStrict) {
+      return 0;
+    }
+    if (consumed >= NUMERIC_CONSUMED_OVERFLOW) {
+      longNumericConsumed = consumed;
+      consumed = NUMERIC_CONSUMED_OVERFLOW;
+    }
+    return consumed << NUMERIC_CONSUMED_SHIFT | codePoint;
+  }
+  function findLegacySlot(input, start, maxLength) {
+    let legacy = htmlLengthBits[pairIndex(input.charCodeAt(start), input.charCodeAt(start + 1))] >>> 16 & 31;
+    while (legacy !== 0) {
+      const top = 31 - Math.clz32(legacy);
+      legacy ^= 1 << top;
+      if (top + 2 > maxLength)
+        continue;
+      const slot = findSlotHtml(input, start, top + 2);
+      if (slot >= 0 && (htmlSlotValue[slot] & 2) !== 0) {
+        return slot << 3 | top + 2;
+      }
+    }
+    return -1;
+  }
+  function findLongClassMatch(input, start, mode) {
+    const length = input.slice(start, start + 32).indexOf(";");
+    if (length - 2 >>> 0 <= 29) {
+      const slot = findSlotHtml(input, start, length);
+      if (slot >= 0)
+        return slot << 6 | length + 1;
+    }
+    if (mode !== DecodingMode.Strict) {
+      const packed = findLegacySlot(input, start, Math.min(31, input.length - start));
+      if (packed >= 0) {
+        const length2 = packed & 7;
+        if (mode !== DecodingMode.Attribute || start + length2 >= input.length || !isEntityInAttributeInvalidEnd(input.charCodeAt(start + length2)))
+          return packed >> 3 << 6 | length2;
+      }
+    }
+    return -1;
+  }
+  function nextOffset(input, last) {
+    if (last >= input.length)
+      return -1;
+    return input.charCodeAt(last) === CHAR_AMP ? last : input.indexOf("&", last);
+  }
+  function decodeHtmlText(input, mode) {
+    const isLegacyAllowed = mode !== DecodingMode.Strict;
+    let offset = input.indexOf("&");
+    if (offset < 0)
+      return input;
+    const inputLength = input.length;
+    let result = "";
+    let last = 0;
+    do {
+      const start = offset + 1;
+      if (start + 1 >= inputLength)
+        break;
+      const c0 = input.charCodeAt(start);
+      if (c0 === CHAR_AMP) {
+        offset = start;
+        continue;
+      }
+      if (c0 === CHAR_NUM) {
+        const packed = parseNumericEntity(input, start + 1, !isLegacyAllowed);
+        const consumed = unpackConsumed(packed);
+        if (consumed === 0) {
+          offset = input.indexOf("&", start);
+        } else {
+          if (last !== offset) {
+            result += input.slice(last, offset);
+          }
+          result += codePointToString(packed & NUMERIC_CODE_POINT_MASK);
+          last = offset + consumed;
+          offset = nextOffset(input, last);
+        }
+        continue;
+      }
+      const bits = htmlLengthBits[pairIndex(c0, input.charCodeAt(start + 1))];
+      if ((bits & 32768) !== 0) {
+        const packed = findLongClassMatch(input, start, mode);
+        if (packed >= 0) {
+          if (last !== offset)
+            result += input.slice(last, offset);
+          result += emitHtmlValue(htmlSlotValue[packed >> 6]);
+          last = start + (packed & 63);
+          offset = nextOffset(input, last);
+        } else {
+          offset = input.indexOf("&", start);
+        }
+        continue;
+      }
+      let probed = bits & 32767;
+      let matched = -1;
+      while (probed !== 0) {
+        const low = probed & -probed;
+        probed ^= low;
+        const length = 33 - Math.clz32(low);
+        const end = start + length;
+        if (end > inputLength)
+          break;
+        const isTerminated = end < inputLength && input.charCodeAt(end) === CHAR_SEMI;
+        if (!(isTerminated || isLegacyAllowed && (bits >>> length + 14 & 1) !== 0))
+          continue;
+        const slot = findSlotHtml(input, start, length);
+        if (slot < 0)
+          continue;
+        if (isTerminated) {
+          matched = slot << 6 | 32 | length + 1;
+          break;
+        }
+        if ((htmlSlotValue[slot] & 2) !== 0) {
+          matched = slot << 6 | length;
+        }
+      }
+      if (matched >= 0) {
+        const length = matched & 31;
+        if ((matched & 32) !== 0 || mode !== DecodingMode.Attribute || start + length >= inputLength || !isEntityInAttributeInvalidEnd(input.charCodeAt(start + length))) {
+          if (last !== offset)
+            result += input.slice(last, offset);
+          result += emitHtmlValue(htmlSlotValue[matched >> 6]);
+          last = start + length;
+          offset = nextOffset(input, last);
+          continue;
+        }
+      }
+      offset = input.indexOf("&", start + 1);
+    } while (offset >= 0);
+    return result + input.slice(last);
+  }
+  function decodeHTML(htmlString, mode = DecodingMode.Legacy) {
+    return decodeHtmlText(htmlString, mode);
+  }
+
+  // node_modules/entities/dist/index.js
+  var EntityLevel;
+  (function(EntityLevel2) {
+    EntityLevel2[EntityLevel2["XML"] = 0] = "XML";
+    EntityLevel2[EntityLevel2["HTML"] = 1] = "HTML";
+  })(EntityLevel || (EntityLevel = {}));
+  var EncodingMode;
+  (function(EncodingMode2) {
+    EncodingMode2[EncodingMode2["UTF8"] = 0] = "UTF8";
+    EncodingMode2[EncodingMode2["ASCII"] = 1] = "ASCII";
+    EncodingMode2[EncodingMode2["Extensive"] = 2] = "Extensive";
+    EncodingMode2[EncodingMode2["Attribute"] = 3] = "Attribute";
+    EncodingMode2[EncodingMode2["Text"] = 4] = "Text";
+  })(EncodingMode || (EncodingMode = {}));
+
+  // node_modules/marked/lib/marked.esm.js
+  function B() {
+    return { async: false, breaks: false, extensions: null, gfm: true, hooks: null, pedantic: false, renderer: null, silent: false, tokenizer: null, walkTokens: null };
+  }
+  var y = B();
+  function V(a3) {
+    y = a3;
+  }
+  var M = { exec: () => null };
+  function D(a3) {
+    let e = [];
+    return (t) => {
+      let n = Math.max(0, Math.min(3, t - 1)), i = e[n];
+      return i || (i = a3(n), e[n] = i), i;
+    };
+  }
+  function h(a3, e = "") {
+    let t = typeof a3 == "string" ? a3 : a3.source, n = { replace: (i, r) => {
+      let o = typeof r == "string" ? r : r.source;
+      return o = o.replace(x.caret, "$1"), t = t.replace(i, o), n;
+    }, getRegex: () => new RegExp(t, e) };
+    return n;
+  }
+  var ze = ((a3 = "") => {
+    try {
+      return !!new RegExp("(?<=1)(?<!1)" + a3);
+    } catch {
+      return false;
+    }
+  })();
+  var x = { codeRemoveIndent: /^(?: {0,3}\t| {1,4})/gm, outputLinkReplace: /\\([\[\]])/g, indentCodeCompensation: /^(\s+)(?:```)/, beginningSpace: /^\s+/, endingHash: /#$/, startingSpaceChar: /^ /, endingSpaceChar: / $/, endingSpaceTabChar: /[ \t]$/, nonSpaceChar: /[^ ]/, newLineCharGlobal: /\n/g, tabCharGlobal: /\t/g, leadingSpaceTab: /^[ \t]+/, multipleSpaceGlobal: /\s+/g, blankLine: /^[ \t]*$/, doubleBlankLine: /\n[ \t]*\n[ \t]*$/, blockquoteStart: /^ {0,3}>/, blockquoteSetextReplace: /\n {0,3}((?:=+|-+) *)(?=\n|$)/g, blockquoteSetextReplace2: /^ {0,3}>[ \t]?/gm, listReplaceNesting: /^ {1,4}(?=( {4})*[^ ])/g, listIsTask: /^\[[ xX]\] +\S/, listReplaceTask: /^\[[ xX]\] +/, listTaskCheckbox: /\[[ xX]\]/, anyLine: /\n.*\n/, hrefBrackets: /^<(.*)>$/, tableDelimiter: /[:|]/, tableAlignChars: /^\||\| *$/g, tableRowBlankLine: /\n[ \t]*$/, tableAlignRight: /^ *-+: *$/, tableAlignCenter: /^ *:-+: *$/, tableAlignLeft: /^ *:-+ *$/, startATag: /^<a /i, endATag: /^<\/a>/i, startPreScriptTag: /^<(pre|code|kbd|script)(\s|>)/i, endPreScriptTag: /^<\/(pre|code|kbd|script)(\s|>)/i, startAngleBracket: /^</, endAngleBracket: />$/, pedanticHrefTitle: /^([^'"]*[^\s])\s+(['"])(.*)\2/, unicodeAlphaNumeric: /[\p{L}\p{N}]/u, numericCharacterReference: /&#(?:(\d{1,7})|[Xx]([A-Fa-f0-9]{1,6}));/, numericCharacterReferenceOrAmpersand: /&#(?:(\d{1,7})|[Xx]([A-Fa-f0-9]{1,6}));|&(?!(#\d{1,7}|#[Xx][a-fA-F0-9]{1,6}|\w+);)/g, escapeTest: /[&<>"']/, escapeReplace: /[&<>"']/g, escapeTestNoEncode: /[<>"']|&(?!(#\d{1,7}|#[Xx][a-fA-F0-9]{1,6}|\w+);)/, escapeReplaceNoEncode: /[<>"']|&(?!(#\d{1,7}|#[Xx][a-fA-F0-9]{1,6}|\w+);)/g, caret: /(^|[^\[])\^/g, percentDecode: /%25/g, findPipe: /\|/g, splitPipe: / \|/, slashPipe: /\\\|/g, carriageReturn: /\r\n|\r/g, spaceLine: /^ +$/gm, notSpaceStart: /^\S*/, endingNewline: /\n$/, listItemRegex: (a3) => new RegExp(`^( {0,3}${a3})((?:[	 ][^\\n]*)?(?:\\n|$))`), nextBulletRegex: D((a3) => new RegExp(`^ {0,${a3}}(?:[*+-]|\\d{1,9}[.)])((?:[ 	][^\\n]*)?(?:\\n|$))`)), hrRegex: D((a3) => new RegExp(`^ {0,${a3}}((?:-[ 	]*){3,}|(?:_[ 	]*){3,}|(?:\\*[ 	]*){3,})(?:\\n+|$)`)), fencesBeginRegex: D((a3) => new RegExp(`^ {0,${a3}}(?:\`\`\`|~~~)`)), headingBeginRegex: D((a3) => new RegExp(`^ {0,${a3}}#`)), htmlBeginRegex: D((a3) => new RegExp(`^ {0,${a3}}(?:</?(?:${Q})(?: +|$|/?>)|<(?:(?:script|pre|style|textarea)(?:[\\s>]|$)|!--)|<\\?|<![A-Za-z]|<!\\[CDATA\\[)`, "i")), blockquoteBeginRegex: D((a3) => new RegExp(`^ {0,${a3}}>`)) };
+  var Ee = /^(?:[ \t]*(?:\n|$))+/;
+  var Me = /^((?: {4}| {0,3}\t)[^\n]+(?:\n(?:[ \t]*(?:\n|$))*)?)+/;
+  var Ce = /^ {0,3}(`{3,}(?=[^`\n]*(?:\n|$))|~{3,})([^\n]*)(?:\n|$)(?:|([\s\S]*?)(?:\n|$))(?: {0,3}\1[~`]* *(?=\n|$)|$)/;
+  var N = /^ {0,3}((?:-[\t ]*){3,}|(?:_[ \t]*){3,}|(?:\*[ \t]*){3,})(?:\n+|$)/;
+  var Ie = /^ {0,3}(#{1,6})(?=\s|$)(.*)(?:\n+|$)/;
+  var Y = / {0,3}(?:[*+-]|\d{1,9}[.)])/;
+  var fe = /^(?!bull |blockCode|fences|blockquote|heading|html|table)((?:.|\n(?!\s*?\n|bull |fences|blockquote|heading|hr|html|table))+?)\n {0,3}(=+|-+) *(?:\n+|$)/;
+  var me = h(fe).replace(/bull/g, Y).replace(/blockCode/g, /(?: {4}| {0,3}\t)/).replace(/fences/g, / {0,3}(?:`{3,}|~{3,})/).replace(/blockquote/g, / {0,3}>/).replace(/heading/g, / {0,3}#{1,6}(?:\s|$)/).replace(/hr/g, / {0,3}(?:(?:-[\t ]*){3,}|(?:_[ \t]*){3,}|(?:\*[ \t]*){3,})(?:\n+|$)/).replace(/html/g, / {0,3}<[^\n>]+>\n/).replace(/\|table/g, "").getRegex();
+  var Be = h(fe).replace(/bull/g, Y).replace(/blockCode/g, /(?: {4}| {0,3}\t)/).replace(/fences/g, / {0,3}(?:`{3,}|~{3,})/).replace(/blockquote/g, / {0,3}>/).replace(/heading/g, / {0,3}#{1,6}(?:\s|$)/).replace(/hr/g, / {0,3}(?:(?:-[\t ]*){3,}|(?:_[ \t]*){3,}|(?:\*[ \t]*){3,})(?:\n+|$)/).replace(/html/g, / {0,3}<[^\n>]+>\n/).replace(/table/g, / {0,3}\|?(?:[:\- ]*\|)+[\:\- ]*\n/).getRegex();
+  var ee = /^([^\n]+(?:\n(?!hr|heading|lheading|blockquote|fences|list|html|table|[ \t]+\n)[^\n]+)*)/;
+  var De = /^[^\n]+/;
+  var te = /(?!\s*\])(?:\\[\s\S]|[^\[\]\\])+/;
+  var qe = h(/^ {0,3}\[(label)\]: *(?:\n[ \t]*)?([^<\s][^\s]*|<.*?>)(?:(?: +(?:\n[ \t]*)?| *\n[ \t]*)(title))? *(?:\n+|$)/).replace("label", te).replace("title", /(?:"(?:\\"?|[^"\\])*"|'[^'\n]*(?:\n[^'\n]+)*\n?'|\([^()]*\))/).getRegex();
+  var Ze = h(/^(bull)([ \t][^\n]*?)?(?:\n|$)/).replace(/bull/g, Y).getRegex();
+  var Q = "address|article|aside|base|basefont|blockquote|body|caption|center|col|colgroup|dd|details|dialog|dir|div|dl|dt|fieldset|figcaption|figure|footer|form|frame|frameset|h[1-6]|head|header|hr|html|iframe|legend|li|link|main|menu|menuitem|meta|nav|noframes|ol|optgroup|option|p|param|search|section|summary|table|tbody|td|tfoot|th|thead|title|tr|track|ul";
+  var ne = /<!--(?:-?>|[\s\S]*?(?:-->|$))/;
+  var ve = h("^ {0,3}(?:<(script|pre|style|textarea)[\\s>][\\s\\S]*?(?:</\\1>[^\\n]*\\n*|$)|comment[^\\n]*(\\n+|$)|<\\?[\\s\\S]*?(?:\\?>[^\\n]*\\n*|$)|<![A-Z][\\s\\S]*?(?:>[^\\n]*\\n*|$)|<!\\[CDATA\\[[\\s\\S]*?(?:\\]\\]>[^\\n]*\\n*|$)|</?(tag)(?: +|\\n|/?>)[\\s\\S]*?(?:(?:\\n[ 	]*)+\\n|$)|<(?!(?:script|pre|style|textarea)(?![a-z0-9-]))([a-z][a-z0-9-]*)(?:attribute)*? */?>(?=[ \\t]*(?:\\n|$))[\\s\\S]*?(?:(?:\\n[ 	]*)+\\n|$)|</[a-z][a-z0-9-]*\\s*>(?=[ \\t]*(?:\\n|$))[\\s\\S]*?(?:(?:\\n[ 	]*)+\\n|$))", "i").replace("comment", ne).replace("tag", Q).replace("attribute", / +[a-zA-Z:_][\w.:-]*(?: *= *"[^"\n]*"| *= *'[^'\n]*'| *= *[^\s"'=<>`]+)?/).getRegex();
+  var xe = (a3) => h(ee).replace("hr", N).replace("heading", " {0,3}#{1,6}(?:\\s|$)").replace("|lheading", "").replace("|table", "").replace("blockquote", " {0,3}>").replace("fences", " {0,3}(?:`{3,}(?=[^`\\n]*(?:\\n|$))|~~~)[^\\n]*(?:\\n|$)").replace("list", a3).replace("html", " {0,3}(?:</?(?:tag)(?: +|\\n|/?>)|<(?:(?:script|pre|style|textarea)(?:[\\s>]|$)|!--)|<\\?|<![A-Za-z]|<!\\[CDATA\\[)").replace("tag", Q).getRegex();
+  var He = xe(/ {0,3}(?:[*+-]|1[.)])[ \t]+[^ \t\n]/);
+  var Ge = xe(/ {0,3}(?:[*+-]|\d{1,9}[.)])(?:[ \t]|\n|$)/);
+  var Ne = h(/^( {0,3}> ?(paragraph|[^\n]*)(?:\n|$))+/).replace("paragraph", Ge).getRegex();
+  var re = { blockquote: Ne, code: Me, def: qe, fences: Ce, heading: Ie, hr: N, html: ve, lheading: me, list: Ze, newline: Ee, paragraph: He, table: M, text: De };
+  var de = h("^ *([^\\n ].*)\\n {0,3}((?:\\| *)?:?-+:? *(?:\\| *:?-+:? *)*(?:\\| *)?)(?:\\n((?:(?! *\\n|hr|heading|blockquote|code|fences|list|html).*(?:\\n|$))*)\\n*|$)").replace("hr", N).replace("heading", " {0,3}#{1,6}(?:\\s|$)").replace("blockquote", " {0,3}>").replace("code", "(?: {4}| {0,3}	)[^\\n]").replace("fences", " {0,3}(?:`{3,}(?=[^`\\n]*(?:\\n|$))|~~~)[^\\n]*(?:\\n|$)").replace("list", " {0,3}(?:[*+-]|1[.)])[ \\t]").replace("html", " {0,3}(?:</?(?:tag)(?: +|\\n|/?>)|<(?:(?:script|pre|style|textarea)(?:[\\s>]|$)|!--)|<\\?|<![A-Za-z]|<!\\[CDATA\\[)").replace("tag", Q).getRegex();
+  var Qe = { ...re, lheading: Be, table: de, paragraph: h(ee).replace("hr", N).replace("heading", " {0,3}#{1,6}(?:\\s|$)").replace("|lheading", "").replace("table", de).replace("blockquote", " {0,3}>").replace("fences", " {0,3}(?:`{3,}(?=[^`\\n]*(?:\\n|$))|~~~)[^\\n]*(?:\\n|$)").replace("list", " {0,3}(?:[*+-]|1[.)])[ \\t]+[^ \\t\\n]").replace("html", " {0,3}(?:</?(?:tag)(?: +|\\n|/?>)|<(?:(?:script|pre|style|textarea)(?:[\\s>]|$)|!--)|<\\?|<![A-Za-z]|<!\\[CDATA\\[)").replace("tag", Q).getRegex() };
+  var je = { ...re, html: h(`^ *(?:comment *(?:\\n|\\s*$)|<(tag)[\\s\\S]+?</\\1> *(?:\\n{2,}|\\s*$)|<tag(?:"[^"]*"|'[^']*'|\\s[^'"/>\\s]*)*?/?> *(?:\\n{2,}|\\s*$))`).replace("comment", ne).replace(/tag/g, "(?!(?:a|em|strong|small|s|cite|q|dfn|abbr|data|time|code|var|samp|kbd|sub|sup|i|b|u|mark|ruby|rt|rp|bdi|bdo|span|br|wbr|ins|del|img)\\b)\\w+(?!:|[^\\w\\s@]*@)\\b").getRegex(), def: /^ *\[([^\]]+)\]: *<?([^\s>]+)>?(?: +(["(][^\n]+[")]))? *(?:\n+|$)/, heading: /^(#{1,6})(.*)(?:\n+|$)/, fences: M, lheading: /^(.+?)\n {0,3}(=+|-+) *(?:\n+|$)/, paragraph: h(ee).replace("hr", N).replace("heading", ` *#{1,6} *[^
+]`).replace("lheading", me).replace("|table", "").replace("blockquote", " {0,3}>").replace("|fences", "").replace("|list", "").replace("|html", "").replace("|tag", "").getRegex() };
+  var Fe = /^\\([!"#$%&'()*+,\-./:;<=>?@\[\]\\^_`{|}~])/;
+  var Ue = /^(`+)([^`]|[^`][\s\S]*?[^`])\1(?!`)/;
+  var be = /^( {2,}|\\)\n(?!\s*$)[ \t]*/;
+  var Ke = /^(`+|[^`])(?:(?= {2,}\n)|[\s\S]*?(?:(?=[\\<!\[`*_]|\b_|$)|[^ ](?= {2,}\n)))/;
+  var S = /[\p{P}\p{S}]/u;
+  var q = /[\s\p{P}\p{S}]/u;
+  var j = /[^\s\p{P}\p{S}]/u;
+  var Xe = h(/^((?![*_])punctSpace)/, "u").replace(/punctSpace/g, q).getRegex();
+  var We = /[\p{Pi}\p{Ps}"']/u;
+  var Re = /(?!~)[\p{P}\p{S}]/u;
+  var Ve = /(?!~)[\s\p{P}\p{S}]/u;
+  var Je = /(?:[^\s\p{P}\p{S}]|~)/u;
+  var Ye = h(/link|precode-code|html/, "g").replace("link", /\[(?:[^\[\]`]|(?<a>`+)[^`]+\k<a>(?!`))*?\]\((?:\\[\s\S]|[^\\\(\)]|\((?:\\[\s\S]|[^\\\(\)])*\))*\)/).replace("precode-", ze ? "(?<!`)()" : "(^^|[^`])").replace("code", /(?<b>`+)[^`]+\k<b>(?!`)/).replace("html", /<(?! )[^<>]*?>/).getRegex();
+  var Te = /^(?:\*+(?:((?!\*)punct)|([^\s*]))?)|^_+(?:((?!_)punct)|([^\s_]))?/;
+  var et = h(Te, "u").replace(/punct/g, S).getRegex();
+  var tt = h(Te, "u").replace(/punct/g, Re).getRegex();
+  var nt = /^(?:\*+(?:((?!\*)(?!openQuote)punct)|([^\s*]))?)|^_+(?:((?!_)(?!openQuote)punct)|([^\s_]))?/;
+  var rt = h(nt, "u").replace(/openQuote/g, We).replace(/punct/g, S).getRegex();
+  var Oe = "^[^_*]*?__[^_*]*?\\*[^_*]*?(?=__)|[^*]+(?=[^*])|(?!\\*)punct(\\*+)(?=[\\s]|$)|notPunctSpace(\\*+)(?!\\*)(?=punctSpace|$)|(?!\\*)punctSpace(\\*+)(?=notPunctSpace)|[\\s](\\*+)(?!\\*)(?=punct)|(?!\\*)punct(\\*+)(?!\\*)(?=punct)|notPunctSpace(\\*+)(?=notPunctSpace)";
+  var st = h(Oe, "gu").replace(/notPunctSpace/g, j).replace(/punctSpace/g, q).replace(/punct/g, S).getRegex();
+  var it = h(Oe, "gu").replace(/notPunctSpace/g, Je).replace(/punctSpace/g, Ve).replace(/punct/g, Re).getRegex();
+  var ot = "^[^_*]*?__[^_*]*?\\*[^_*]*?(?=__)|[^*]+(?=[^*])|(?!\\*)punct(\\*+)(?=[\\s]|$)|notPunctSpace(\\*+)(?!\\*)(?=punctSpace|$)|(?!\\*)[\\s](\\*+)(?=notPunctSpace)|[\\s](\\*+)(?!\\*)(?=punct)|(?!\\*)punct(\\*+)(?!\\*)(?=punct)|(?:(?!\\*)punct|notPunctSpace)(\\*+)(?!\\*)(?=notPunctSpace)";
+  var at = h(ot, "gu").replace(/notPunctSpace/g, j).replace(/punctSpace/g, q).replace(/punct/g, S).getRegex();
+  var lt = h("^[^_*]*?\\*\\*[^_*]*?_[^_*]*?(?=\\*\\*)|[^_]+(?=[^_])|(?!_)punct(_+)(?=[\\s]|$)|notPunctSpace(_+)(?!_)(?=punctSpace|$)|(?!_)punctSpace(_+)(?=notPunctSpace)|[\\s](_+)(?!_)(?=punct)|(?!_)punct(_+)(?!_)(?=punct)", "gu").replace(/notPunctSpace/g, j).replace(/punctSpace/g, q).replace(/punct/g, S).getRegex();
+  var ut = "^[^_*]*?\\*\\*[^_*]*?_[^_*]*?(?=\\*\\*)|[^_]+(?=[^_])|(?!_)punct(_+)(?=[\\s]|$)|notPunctSpace(_+)(?!_)(?=punctSpace|$)|(?!_)[\\s](_+)(?=notPunctSpace)|[\\s](_+)(?!_)(?=punct)|(?!_)punct(_+)(?!_)(?=punct)|(?:(?!_)punct|notPunctSpace)(_+)(?!_)(?=notPunctSpace)";
+  var pt = h(ut, "gu").replace(/notPunctSpace/g, j).replace(/punctSpace/g, q).replace(/punct/g, S).getRegex();
+  var ct = h(/^~~?(?:((?!~)punct)|[^\s~])/, "u").replace(/punct/g, S).getRegex();
+  var ht = "^[^~]+(?=[^~])|(?!~)punct(~~?)(?=[\\s]|$)|notPunctSpace(~~?)(?!~)(?=punctSpace|$)|(?!~)punctSpace(~~?)(?=notPunctSpace)|[\\s](~~?)(?!~)(?=punct)|(?!~)punct(~~?)(?!~)(?=punct)|notPunctSpace(~~?)(?=notPunctSpace)";
+  var dt = h(ht, "gu").replace(/notPunctSpace/g, j).replace(/punctSpace/g, q).replace(/punct/g, S).getRegex();
+  var kt = h(/\\(punct)/, "gu").replace(/punct/g, S).getRegex();
+  var gt = h(/(`+)(?:[^`]|[^`][\s\S]*?[^`])\1(?!`)|`+|\\(punct)/, "gu").replace(/punct/g, S).getRegex();
+  var ft = h(/^<(scheme:[^\s\x00-\x1f<>]*|email)>/).replace("scheme", /[a-zA-Z][a-zA-Z0-9+.-]{1,31}/).replace("email", /[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+(@)[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+(?![-_])/).getRegex();
+  var mt = h(ne).replace("(?:-->|$)", "-->").getRegex();
+  var xt = h("^comment|^</[a-zA-Z][a-zA-Z0-9-]*\\s*>|^<[a-zA-Z][a-zA-Z0-9-]*(?:attribute)*?\\s*/?>|^<\\?[\\s\\S]*?\\?>|^<![a-zA-Z]+\\s[\\s\\S]*?>|^<!\\[CDATA\\[[\\s\\S]*?\\]\\]>").replace("comment", mt).replace("attribute", /\s+[a-zA-Z:_][\w.:-]*(?:\s*=\s*"[^"]*"|\s*=\s*'[^']*'|\s*=\s*[^\s"'=<>`]+)?/).getRegex();
+  var we = /\[(?:\\[\s\S]|[^\[\]\\])*\]/;
+  var K = h(/(?:\[(?:brackets|\\[\s\S]|[^\[\]\\])*\]|\\[\s\S]|`+(?!`)[^`]*?`+(?!`)|``+(?=\])|[^\[\]\\`])*?/).replace("brackets", we).getRegex();
+  var bt = h(/^!?\[(label)\]\([ \t\n]*(href)(?:(?:[ \t]+(?:\n[ \t]*)?|\n[ \t]*)(title))?[ \t\n]*\)/).replace("label", K).replace("href", /<(?:\\.|[^\n<>\\])+>|[^ \t\n\x00-\x1f]+|(?=\))/).replace("title", /"(?:\\"?|[^"\\])*"|'(?:\\'?|[^'\\])*'|\((?:\\\)?|[^)\\])*\)/).getRegex();
+  var Rt = h(/^!?\[(label)\]\[(ref)\]/).replace("label", K).replace("ref", te).getRegex();
+  var Tt = h(/^!?\[(ref)\](?:\[\])?/).replace("ref", te).getRegex();
+  var ke = /(?!\s*\])(?:\\[\s\S]|[^\[\]\\]){1,999}/;
+  var Ot = h(/(?:[^\[\]\\`]*(?:\[(?:brackets|\\[\s\S]|[^\[\]\\])*\]|\\[\s\S]|`+(?!`)[^`]*?`+(?!`)|``+(?=\]))){0,999}?[^\[\]\\`]*?/).replace("brackets", we).getRegex();
+  var wt = h("reflink|nolink(?!\\()", "g").replace("reflink", h(/^!?\[(label)\]\[(ref)\]/).replace("label", Ot).replace("ref", ke).getRegex()).replace("nolink", h(/^!?\[(ref)\](?:\[\])?/).replace("ref", ke).getRegex()).getRegex();
+  var ge = /[hH][tT][tT][pP][sS]?|[fF][tT][pP]/;
+  var Pt = /[A-Za-z0-9._+-]+@[a-zA-Z0-9-_]+(?:\.[a-zA-Z0-9-_]*[a-zA-Z0-9])+(?![\w-])/;
+  var yt = h(/(?:mailto:email|xmpp:email(?:\/[A-Za-z0-9@.]+)?)/).replace(/email/g, Pt).getRegex();
+  var se = { _backpedal: M, anyPunctuation: kt, anyPunctuationOutsideCode: gt, autolink: ft, blockSkip: Ye, br: be, code: Ue, del: M, delLDelim: M, delRDelim: M, emStrongLDelim: et, emStrongRDelimAst: st, emStrongRDelimUnd: lt, escape: Fe, link: bt, nolink: Tt, punctuation: Xe, reflink: Rt, reflinkSearch: wt, tag: xt, text: Ke, url: M };
+  var St = { ...se, emStrongLDelim: rt, emStrongRDelimAst: at, emStrongRDelimUnd: pt, link: h(/^!?\[(label)\]\((.*?)\)/).replace("label", K).getRegex(), reflink: h(/^!?\[(label)\]\s*\[([^\]]*)\]/).replace("label", K).getRegex() };
+  var J = { ...se, emStrongRDelimAst: it, emStrongLDelim: tt, delLDelim: ct, delRDelim: dt, url: h(/^emailProtocol|^((?:protocol):\/\/|www\.)(?:[a-zA-Z0-9\-]+\.?)+[^\s<]*|^email/).replace("emailProtocol", yt).replace("protocol", ge).replace("email", /[A-Za-z0-9._+-]+(@)[a-zA-Z0-9-_]+(?:\.[a-zA-Z0-9-_]*[a-zA-Z0-9])+(?![\w-])/).getRegex(), _backpedal: /(?:[^?!.,:;*_'"~()&]+|\([^)]*\)|&(?![a-zA-Z0-9]+;$)|[?!.,:;*_'"~)]+(?!$))+/, del: /^(~~?)(?=[^\s~])((?:\\[\s\S]|[^\\])*?(?:\\[\s\S]|[^\s~\\]))\1(?=[^~]|$)/, text: h(/^(?:[^a-zA-Z0-9](?=emailProtocol)|(`+|~+|[^`~])(?:(?=[`~])|(?= {2,}\n)|(?=[a-zA-Z0-9.!#$%&'*+\/=?_`{\|}~-]+@)|[\s\S]*?(?:(?=[\\<!\[`*~_]|\b_|protocol:\/\/|www\.|$)|[^ ](?= {2,}\n)|[^a-zA-Z0-9](?=emailProtocol)|[^a-zA-Z0-9.!#$%&'*+\/=?_`{\|}~-](?=[a-zA-Z0-9.!#$%&'*+\/=?_`{\|}~-]+@))))/).replace("protocol", ge).replace(/emailProtocol/g, /(?:mailto|xmpp):/).getRegex() };
+  var _t = { ...J, br: h(be).replace("{2,}", "*").getRegex(), text: h(J.text).replace("\\b_", "\\b_| {2,}\\n").replace(/\{2,\}/g, "*").getRegex() };
+  var F = { normal: re, gfm: Qe, pedantic: je };
+  var Z = { normal: se, gfm: J, breaks: _t, pedantic: St };
+  var $t = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
+  var Pe = (a3) => $t[a3];
+  function w(a3, e) {
+    if (e) {
+      if (x.escapeTest.test(a3)) return a3.replace(x.escapeReplace, Pe);
+    } else if (x.escapeTestNoEncode.test(a3)) return a3.replace(x.escapeReplaceNoEncode, Pe);
+    return a3;
+  }
+  function ye(a3) {
+    return x.numericCharacterReference.test(a3) ? a3.replace(x.numericCharacterReferenceOrAmpersand, (e, t, n) => {
+      if (t === void 0 && n === void 0) return "&amp;";
+      let i = t === void 0 ? Number.parseInt(n, 16) : Number.parseInt(t, 10);
+      return i === 0 || i > 1114111 || i >= 55296 && i <= 57343 ? "\uFFFD" : i === 38 ? "&amp;" : String.fromCodePoint(i);
+    }) : a3;
+  }
+  function ie(a3) {
+    try {
+      a3 = encodeURI(a3).replace(x.percentDecode, "%");
+    } catch {
+      return null;
+    }
+    return a3;
+  }
+  function oe(a3, e) {
+    let t = a3.replace(x.findPipe, (r, o, s) => {
+      let l = false, u = o;
+      for (; --u >= 0 && s[u] === "\\"; ) l = !l;
+      return l ? "|" : " |";
+    }), n = t.split(x.splitPipe), i = 0;
+    if (n[0].trim() || n.shift(), n.length > 0 && !n.at(-1)?.trim() && n.pop(), e) if (n.length > e) n.splice(e);
+    else for (; n.length < e; ) n.push("");
+    for (; i < n.length; i++) n[i] = n[i].trim().replace(x.slashPipe, "|");
+    return n;
+  }
+  function A(a3, e, t) {
+    let n = a3.length;
+    if (n === 0) return "";
+    let i = 0;
+    for (; i < n; ) {
+      let r = a3.charAt(n - i - 1);
+      if (r === e && !t) i++;
+      else if (r !== e && t) i++;
+      else break;
+    }
+    return a3.slice(0, n - i);
+  }
+  function ae(a3) {
+    let e = a3.split(`
+`), t = e.length - 1;
+    for (; t >= 0 && x.blankLine.test(e[t]); ) t--;
+    return e.length - t <= 2 ? a3 : e.slice(0, t + 1).join(`
+`);
+  }
+  function v(a3) {
+    return a3.trim().toLowerCase().toUpperCase().toLowerCase();
+  }
+  function le(a3, e) {
+    if (a3.indexOf(e[0]) === -1 && a3.indexOf(e[1]) === -1) return -1;
+    let t = 0;
+    for (let n = 0; n < a3.length; n++) if (a3[n] === "\\") n++;
+    else if (a3[n] === e[0]) t++;
+    else if (a3[n] === e[1] && (t--, t < 0)) return n;
+    return t > 0 ? -2 : -1;
+  }
+  function X(a3, e = 0) {
+    let t = e, n = "";
+    for (let i of a3) if (i === "	") {
+      let r = 4 - t % 4;
+      n += " ".repeat(r), t += r;
+    } else n += i, t++;
+    return n;
+  }
+  function Se(a3, e, t, n, i) {
+    let r = e.href, o = e.title || null, s = a3[1].replace(i.other.outputLinkReplace, "$1"), l = a3[0].charAt(0) === "!", u = n.state.inLink, c = n.state.linkEmitted, p = n.state.inRawBlock;
+    n.state.inLink = true, n.state.linkEmitted = false;
+    let d = n.inlineTokens(s), g = n.state.linkEmitted;
+    if (n.state.linkEmitted = c, n.state.inLink = u, !l) {
+      if (g) {
+        n.state.inRawBlock = p;
+        return;
+      }
+      n.state.linkEmitted = true;
+    }
+    return { type: l ? "image" : "link", raw: t, href: r, title: o, text: s, tokens: d };
+  }
+  function Lt(a3, e, t) {
+    let n = a3.match(t.other.indentCodeCompensation);
+    if (n === null) return e;
+    let i = n[1];
+    return e.split(`
+`).map((r) => {
+      let o = r.match(t.other.beginningSpace);
+      if (o === null) return r;
+      let [s] = o;
+      return r.slice(Math.min(s.length, i.length));
+    }).join(`
+`);
+  }
+  function _e(a3, e, t, n) {
+    if (!e.includes("<")) return false;
+    for (let i = 0; i < e.length; i++) {
+      if (e[i] === "\\") {
+        i++;
+        continue;
+      }
+      if (e[i] === "`") {
+        let s = n.inline.code.exec(e.slice(i));
+        if (s) {
+          i += s[0].length - 1;
+          continue;
+        }
+      }
+      if (e[i] !== "<") continue;
+      let r = a3.slice(t + i), o = n.inline.tag.exec(r) || n.inline.autolink.exec(r);
+      if (o) {
+        if (o[0].length > e.length - i) return true;
+        i += o[0].length - 1;
+      }
+    }
+    return false;
+  }
+  var _ = class {
+    options;
+    rules;
+    lexer;
+    constructor(e) {
+      this.options = e || y;
+    }
+    space(e) {
+      let t = this.rules.block.newline.exec(e);
+      if (t && t[0].length > 0) return { type: "space", raw: t[0] };
+    }
+    code(e) {
+      let t = this.rules.block.code.exec(e);
+      if (t) {
+        let n = this.options.pedantic ? t[0] : ae(t[0]), i = n.replace(this.rules.other.codeRemoveIndent, "");
+        return { type: "code", raw: n, codeBlockStyle: "indented", text: i };
+      }
+    }
+    fences(e) {
+      let t = this.rules.block.fences.exec(e);
+      if (t) {
+        let n = t[0], i = Lt(n, t[3] || "", this.rules);
+        return { type: "code", raw: n, lang: t[2] ? t[2].trim().replace(this.rules.inline.anyPunctuation, "$1") : t[2], text: i };
+      }
+    }
+    heading(e) {
+      let t = this.rules.block.heading.exec(e);
+      if (t) {
+        let n = t[2].trim();
+        if (this.rules.other.endingHash.test(n)) {
+          let i = A(n, "#");
+          (this.options.pedantic || !i || this.rules.other.endingSpaceTabChar.test(i)) && (n = i.trim());
+        }
+        return { type: "heading", raw: A(t[0], `
+`), depth: t[1].length, text: n, tokens: this.lexer.inline(n) };
+      }
+    }
+    hr(e) {
+      let t = this.rules.block.hr.exec(e);
+      if (t) return { type: "hr", raw: A(t[0], `
+`) };
+    }
+    blockquote(e) {
+      let t = this.rules.block.blockquote.exec(e);
+      if (t) {
+        let n = A(t[0], `
+`).split(`
+`), i = "", r = "", o = [];
+        for (; n.length > 0; ) {
+          let s = false, l = [], u;
+          for (u = 0; u < n.length; u++) if (this.rules.other.blockquoteStart.test(n[u])) l.push(n[u]), s = true;
+          else if (!s) l.push(n[u]);
+          else break;
+          n = n.slice(u);
+          let c = l.join(`
+`), p = c.replace(this.rules.other.blockquoteSetextReplace, `
+    $1`).replace(this.rules.other.blockquoteSetextReplace2, "");
+          i = i ? `${i}
+${c}` : c, r = r ? `${r}
+${p}` : p;
+          let d = this.lexer.state.top;
+          if (this.lexer.state.top = true, this.lexer.blockTokens(p, o, true), this.lexer.state.top = d, n.length === 0) break;
+          let g = o.at(-1);
+          if (g?.type === "code" || g?.type === "heading" || g?.type === "hr" || g?.type === "html") break;
+          if (g?.type === "blockquote") {
+            let k = g, P = n.join(`
+`), R = k.raw + `
+` + P.replace(this.rules.other.blockquoteSetextReplace2, ""), m = this.blockquote(R);
+            o[o.length - 1] = m;
+            let E = R.substring(m.raw.length).replace(/^\n/, ""), b = E ? E.split(`
+`).length : 0, H = b ? n.slice(0, -b) : n;
+            H.length > 0 && (i = `${i}
+${H.join(`
+`)}`), r = r.substring(0, r.length - k.text.length) + m.text;
+            break;
+          } else if (g?.type === "list") {
+            let k = g, P = k.raw + `
+` + n.join(`
+`), R = this.list(P);
+            o[o.length - 1] = R, i = i.substring(0, i.length - g.raw.length) + R.raw, r = r.substring(0, r.length - k.raw.length) + R.raw, n = P.substring(o.at(-1).raw.length).split(`
+`);
+            continue;
+          }
+        }
+        return { type: "blockquote", raw: i, tokens: o, text: r };
+      }
+    }
+    list(e) {
+      let t = this.rules.block.list.exec(e);
+      if (t) {
+        let n = e, i = () => n.length - e.length, r = t[1].trim(), o = r.length > 1, s = { type: "list", raw: "", ordered: o, start: o ? +r.slice(0, -1) : "", loose: false, items: [] };
+        r = o ? `\\d{1,9}\\${r.slice(-1)}` : `\\${r}`, this.options.pedantic && (r = o ? r : "[*+-]");
+        let l = this.rules.other.listItemRegex(r), u = false;
+        for (; e; ) {
+          let p = false, d = "";
+          if (!(t = l.exec(e)) || this.rules.block.hr.test(e)) break;
+          let g = i();
+          e = e.substring(t[0].length);
+          let k = t[2].split(`
+`, 1)[0], P = t[1].length, R = this.options.pedantic ? X(k, P) : k.replace(this.rules.other.leadingSpaceTab, (W) => X(W, P)), m = e.split(`
+`, 1)[0], E = !R.trim(), b = 0;
+          if (this.options.pedantic ? (b = 2, d = R.trimStart()) : E ? b = P + 1 : (b = R.search(this.rules.other.nonSpaceChar), b = b > 4 ? 1 : b, d = R.slice(b), b += P), E && this.rules.other.blankLine.test(m) && (e = e.substring(m.length + 1), p = true), !p) {
+            let W = this.rules.other.nextBulletRegex(b), ue = this.rules.other.hrRegex(b), pe = this.rules.other.fencesBeginRegex(b), ce = this.rules.other.headingBeginRegex(b), $e = this.rules.other.htmlBeginRegex(b), Le = this.rules.other.blockquoteBeginRegex(b);
+            for (; e; ) {
+              let he = e.split(`
+`, 1)[0], G;
+              if (m = he, this.options.pedantic ? (m = m.replace(this.rules.other.listReplaceNesting, "  "), G = m) : G = m.replace(this.rules.other.leadingSpaceTab, (Ae) => X(Ae)), pe.test(m) || ce.test(m) || $e.test(m) || Le.test(m) || W.test(m) || ue.test(m)) break;
+              if (G.search(this.rules.other.nonSpaceChar) >= b || !m.trim()) d += `
+` + G.slice(b);
+              else {
+                if (E || R.replace(this.rules.other.tabCharGlobal, "    ").search(this.rules.other.nonSpaceChar) >= 4 || pe.test(R) || ce.test(R) || ue.test(R)) break;
+                d += `
+` + m;
+              }
+              E = !m.trim(), e = e.substring(he.length + 1), R = G.slice(b);
+            }
+          }
+          let H = n.slice(g, i());
+          s.loose || (u ? s.loose = true : this.rules.other.doubleBlankLine.test(H) && (u = true)), s.items.push({ type: "list_item", raw: H, task: !!this.options.gfm && this.rules.other.listIsTask.test(d), loose: false, text: d, tokens: [] });
+        }
+        let c = s.items.at(-1);
+        if (c) c.raw = c.raw.trimEnd(), c.text = c.text.trimEnd();
+        else return;
+        s.raw = n.slice(0, i()).trimEnd();
+        for (let p of s.items) if (this.lexer.state.top = false, p.tokens = this.lexer.blockTokens(p.text, []), !s.loose) {
+          let d = p.tokens.filter((k) => k.type === "space"), g = d.length > 0 && d.some((k) => this.rules.other.anyLine.test(k.raw));
+          s.loose = g;
+        }
+        for (let p of s.items) {
+          let d = p.tokens[0];
+          if (p.task && (d?.type === "text" || d?.type === "paragraph")) {
+            p.text = p.text.replace(this.rules.other.listReplaceTask, ""), d.raw = d.raw.replace(this.rules.other.listReplaceTask, ""), d.text = d.text.replace(this.rules.other.listReplaceTask, "");
+            for (let k = this.lexer.inlineQueue.length - 1; k >= 0; k--) if (this.rules.other.listIsTask.test(this.lexer.inlineQueue[k].src)) {
+              this.lexer.inlineQueue[k].src = this.lexer.inlineQueue[k].src.replace(this.rules.other.listReplaceTask, "");
+              break;
+            }
+            let g = this.rules.other.listTaskCheckbox.exec(p.raw);
+            if (g) {
+              let k = { type: "checkbox", raw: g[0] + " ", checked: g[0] !== "[ ]" };
+              p.checked = k.checked, s.loose ? p.tokens[0] && ["paragraph", "text"].includes(p.tokens[0].type) && "tokens" in p.tokens[0] && p.tokens[0].tokens ? (p.tokens[0].raw = k.raw + p.tokens[0].raw, p.tokens[0].text = k.raw + p.tokens[0].text, p.tokens[0].tokens.unshift(k)) : p.tokens.unshift({ type: "paragraph", raw: k.raw, text: k.raw, tokens: [k] }) : p.tokens.unshift(k);
+            }
+          } else p.task && (p.task = false);
+        }
+        if (s.loose) for (let p of s.items) {
+          p.loose = true;
+          for (let d of p.tokens) d.type === "text" && (d.type = "paragraph");
+        }
+        return s;
+      }
+    }
+    html(e) {
+      let t = this.rules.block.html.exec(e);
+      if (t) {
+        let n = ae(t[0]);
+        return { type: "html", block: true, raw: n, pre: t[1] === "pre" || t[1] === "script" || t[1] === "style", text: n };
+      }
+    }
+    def(e) {
+      let t = this.rules.block.def.exec(e);
+      if (t) {
+        if (!this.rules.other.startAngleBracket.test(t[2]) && le(t[2], "()") !== -1) return;
+        let n = v(t[1]).replace(this.rules.other.multipleSpaceGlobal, " "), i = t[2] ? t[2].replace(this.rules.other.hrefBrackets, "$1").replace(this.rules.inline.anyPunctuation, "$1") : "", r = t[3] ? t[3].substring(1, t[3].length - 1).replace(this.rules.inline.anyPunctuation, "$1") : t[3];
+        return { type: "def", tag: n, raw: A(t[0], `
+`), href: i, title: r };
+      }
+    }
+    table(e) {
+      let t = this.rules.block.table.exec(e);
+      if (!t || !this.rules.other.tableDelimiter.test(t[2])) return;
+      let n = oe(t[1]), i = t[2].replace(this.rules.other.tableAlignChars, "").split("|"), r = t[3]?.trim() ? t[3].replace(this.rules.other.tableRowBlankLine, "").split(`
+`) : [], o = { type: "table", raw: A(t[0], `
+`), header: [], align: [], rows: [] };
+      if (n.length === i.length) {
+        for (let s of i) this.rules.other.tableAlignRight.test(s) ? o.align.push("right") : this.rules.other.tableAlignCenter.test(s) ? o.align.push("center") : this.rules.other.tableAlignLeft.test(s) ? o.align.push("left") : o.align.push(null);
+        for (let s = 0; s < n.length; s++) o.header.push({ text: n[s], tokens: this.lexer.inline(n[s]), header: true, align: o.align[s] });
+        for (let s of r) o.rows.push(oe(s, o.header.length).map((l, u) => ({ text: l, tokens: this.lexer.inline(l), header: false, align: o.align[u] })));
+        return o;
+      }
+    }
+    lheading(e) {
+      let t = this.rules.block.lheading.exec(e);
+      if (t) {
+        let n = t[1].trim();
+        return { type: "heading", raw: A(t[0], `
+`), depth: t[2].charAt(0) === "=" ? 1 : 2, text: n, tokens: this.lexer.inline(n) };
+      }
+    }
+    paragraph(e) {
+      let t = this.rules.block.paragraph.exec(e);
+      if (t) {
+        let n = t[1].charAt(t[1].length - 1) === `
+` ? t[1].slice(0, -1) : t[1];
+        return { type: "paragraph", raw: t[0], text: n, tokens: this.lexer.inline(n) };
+      }
+    }
+    text(e) {
+      let t = this.rules.block.text.exec(e);
+      if (t) return { type: "text", raw: t[0], text: t[0], tokens: this.lexer.inline(t[0]) };
+    }
+    escape(e) {
+      let t = this.rules.inline.escape.exec(e);
+      if (t) return { type: "escape", raw: t[0], text: t[1] };
+    }
+    tag(e) {
+      let t = this.rules.inline.tag.exec(e);
+      if (t) return !this.lexer.state.inLink && this.rules.other.startATag.test(t[0]) ? this.lexer.state.inLink = true : this.lexer.state.inLink && this.rules.other.endATag.test(t[0]) && (this.lexer.state.inLink = false), !this.lexer.state.inRawBlock && this.rules.other.startPreScriptTag.test(t[0]) ? this.lexer.state.inRawBlock = true : this.lexer.state.inRawBlock && this.rules.other.endPreScriptTag.test(t[0]) && (this.lexer.state.inRawBlock = false), { type: "html", raw: t[0], inLink: this.lexer.state.inLink, inRawBlock: this.lexer.state.inRawBlock, block: false, text: t[0] };
+    }
+    link(e) {
+      if (this.lexer.state.linkParenPossible === false) return;
+      let t = this.rules.inline.link.exec(e);
+      if (t) {
+        let n = t[0].charAt(0) === "!" ? 2 : 1;
+        if (!this.options.pedantic && _e(e, t[1], n, this.rules)) return;
+        let i = t[2].trim();
+        if (!this.options.pedantic && this.rules.other.startAngleBracket.test(i)) {
+          if (!this.rules.other.endAngleBracket.test(i)) return;
+          let s = A(i.slice(0, -1), "\\");
+          if ((i.length - s.length) % 2 === 0) return;
+        } else {
+          let s = le(t[2], "()");
+          if (s === -2) return;
+          if (s > -1) {
+            let u = (t[0].indexOf("!") === 0 ? 5 : 4) + t[1].length + s;
+            t[2] = t[2].substring(0, s), t[0] = t[0].substring(0, u).trim(), t[3] = "";
+          }
+        }
+        let r = t[2], o = "";
+        if (this.options.pedantic) {
+          let s = this.rules.other.pedanticHrefTitle.exec(r);
+          s && (r = s[1], o = s[3]);
+        } else o = t[3] ? t[3].slice(1, -1) : "";
+        return r = r.trim(), this.rules.other.startAngleBracket.test(r) && (this.options.pedantic && !this.rules.other.endAngleBracket.test(i) ? r = r.slice(1) : r = r.slice(1, -1)), Se(t, { href: r && r.replace(this.rules.inline.anyPunctuation, "$1"), title: o && o.replace(this.rules.inline.anyPunctuation, "$1") }, t[0], this.lexer, this.rules);
+      }
+    }
+    reflink(e, t) {
+      let n;
+      if ((n = this.rules.inline.reflink.exec(e)) || (n = this.rules.inline.nolink.exec(e))) {
+        let i = n[0].charAt(0) === "!" ? 2 : 1;
+        if (!this.options.pedantic && _e(e, n[1], i, this.rules)) return;
+        let r = (n[2] || n[1]).replace(this.rules.other.multipleSpaceGlobal, " "), o = t[v(r)];
+        if (!o) {
+          let s = n[0].charAt(0);
+          return { type: "text", raw: s, text: s };
+        }
+        return Se(n, o, n[0], this.lexer, this.rules);
+      }
+    }
+    emStrong(e, t, n = "") {
+      let i = this.rules.inline.emStrongLDelim.exec(e);
+      if (!i || !i[1] && !i[2] && !i[3] && !i[4] || i[4] && n.match(this.rules.other.unicodeAlphaNumeric)) return;
+      if (!(i[1] || i[3] || "") || !n || this.rules.inline.punctuation.exec(n)) {
+        let o = [...i[0]].length - 1, s, l, u = o, c = 0, p = i[0][0], d = n === p, g = p === "*" ? this.rules.inline.emStrongRDelimAst : this.rules.inline.emStrongRDelimUnd;
+        for (g.lastIndex = 0, t = t.slice(-1 * e.length + o); (i = g.exec(t)) !== null; ) {
+          if (s = i[1] || i[2] || i[3] || i[4] || i[5] || i[6], !s) continue;
+          if (l = [...s].length, i[3] || i[4]) {
+            u += l;
+            continue;
+          } else if (i[5] || i[6]) {
+            if (o % 3 && !((o + l) % 3)) {
+              c += l;
+              continue;
+            }
+            if (d) break;
+          }
+          if (u -= l, u > 0) continue;
+          l = Math.min(l, l + u + c);
+          let k = [...i[0]][0].length, P = e.slice(0, o + i.index + k + l);
+          if (Math.min(o, l) % 2) {
+            let m = P.slice(1, -1);
+            return { type: "em", raw: P, text: m, tokens: this.lexer.inlineTokens(m) };
+          }
+          let R = P.slice(2, -2);
+          return { type: "strong", raw: P, text: R, tokens: this.lexer.inlineTokens(R) };
+        }
+      }
+    }
+    codespan(e) {
+      let t = this.rules.inline.code.exec(e);
+      if (t) {
+        let n = t[2].replace(this.rules.other.newLineCharGlobal, " "), i = this.rules.other.nonSpaceChar.test(n), r = this.rules.other.startingSpaceChar.test(n) && this.rules.other.endingSpaceChar.test(n);
+        return i && r && (n = n.substring(1, n.length - 1)), { type: "codespan", raw: t[0], text: n };
+      }
+    }
+    br(e) {
+      let t = this.rules.inline.br.exec(e);
+      if (t) return { type: "br", raw: t[0] };
+    }
+    del(e, t, n = "") {
+      let i = this.rules.inline.delLDelim.exec(e);
+      if (!i) return;
+      if (!(i[1] || "") || !n || this.rules.inline.punctuation.exec(n)) {
+        let o = [...i[0]].length - 1, s, l, u = o, c = this.rules.inline.delRDelim;
+        for (c.lastIndex = 0, t = t.slice(-1 * e.length + o); (i = c.exec(t)) !== null; ) {
+          if (s = i[1] || i[2] || i[3] || i[4] || i[5] || i[6], !s || (l = [...s].length, l !== o)) continue;
+          if (i[3] || i[4]) {
+            u += l;
+            continue;
+          }
+          if (u -= l, u > 0) continue;
+          l = Math.min(l, l + u);
+          let p = [...i[0]][0].length, d = e.slice(0, o + i.index + p + l), g = d.slice(o, -o);
+          return { type: "del", raw: d, text: g, tokens: this.lexer.inlineTokens(g) };
+        }
+      }
+    }
+    autolink(e) {
+      let t = this.rules.inline.autolink.exec(e);
+      if (t) {
+        let n, i;
+        return t[2] === "@" ? (n = t[1], i = "mailto:" + n) : (n = t[1], i = n), { type: "link", raw: t[0], text: n, href: i, autolink: true, tokens: [{ type: "text", raw: n, text: n }] };
+      }
+    }
+    url(e) {
+      let t;
+      if (t = this.rules.inline.url.exec(e)) {
+        let n, i;
+        if (t[2] === "@") n = t[0], i = "mailto:" + n;
+        else {
+          let r;
+          do
+            r = t[0], t[0] = this.rules.inline._backpedal.exec(t[0])?.[0] ?? "";
+          while (r !== t[0]);
+          n = t[0], t[1] === "www." ? i = "http://" + t[0] : i = t[0];
+        }
+        return { type: "link", raw: t[0], text: n, href: i, autolink: true, tokens: [{ type: "text", raw: n, text: n }] };
+      }
+    }
+    inlineText(e) {
+      let t = this.rules.inline.text.exec(e);
+      if (t) {
+        let n = this.lexer.state.inRawBlock;
+        return { type: "text", raw: t[0], text: n ? t[0] : ye(t[0]), escaped: n };
+      }
+    }
+  };
+  var T = class a {
+    tokens;
+    options;
+    state;
+    inlineQueue;
+    tokenizer;
+    constructor(e) {
+      this.tokens = [], this.tokens.links = /* @__PURE__ */ Object.create(null), this.options = e || y, this.options.tokenizer = this.options.tokenizer || new _(), this.tokenizer = this.options.tokenizer, this.tokenizer.options = this.options, this.tokenizer.lexer = this, this.inlineQueue = [], this.state = { inLink: false, inRawBlock: false, linkEmitted: false, linkParenPossible: true, top: true };
+      let t = { other: x, block: F.normal, inline: Z.normal };
+      this.options.pedantic ? (t.block = F.pedantic, t.inline = Z.pedantic) : this.options.gfm && (t.block = F.gfm, this.options.breaks ? t.inline = Z.breaks : t.inline = Z.gfm), this.tokenizer.rules = t;
+    }
+    static get rules() {
+      return { block: F, inline: Z };
+    }
+    static lex(e, t) {
+      return new a(t).lex(e);
+    }
+    static lexInline(e, t) {
+      return new a(t).inlineTokens(e);
+    }
+    lex(e) {
+      e = e.replace(x.carriageReturn, `
+`), this.blockTokens(e, this.tokens);
+      for (let t = 0; t < this.inlineQueue.length; t++) {
+        let n = this.inlineQueue[t];
+        this.inlineTokens(n.src, n.tokens);
+      }
+      return this.inlineQueue = [], this.tokens;
+    }
+    blockTokens(e, t = [], n = false) {
+      this.tokenizer.lexer = this, this.options.pedantic && (e = e.replace(x.tabCharGlobal, "    ").replace(x.spaceLine, ""));
+      let i = 1 / 0;
+      for (; e; ) {
+        if (e.length < i) i = e.length;
+        else {
+          this.infiniteLoopError(e.charCodeAt(0));
+          break;
+        }
+        let r;
+        if (this.options.extensions?.block?.some((s) => (r = s.call({ lexer: this }, e, t)) ? (e = e.substring(r.raw.length), t.push(r), true) : false)) continue;
+        if (r = this.tokenizer.space(e)) {
+          e = e.substring(r.raw.length);
+          let s = t.at(-1);
+          r.raw.length === 1 && s !== void 0 ? s.raw += `
+` : t.push(r);
+          continue;
+        }
+        if (r = this.tokenizer.code(e)) {
+          e = e.substring(r.raw.length);
+          let s = t.at(-1);
+          s?.type === "paragraph" || s?.type === "text" ? (s.raw += (s.raw.endsWith(`
+`) ? "" : `
+`) + r.raw, s.text += `
+` + r.text, this.inlineQueue.at(-1).src = s.text) : t.push(r);
+          continue;
+        }
+        if (r = this.tokenizer.fences(e)) {
+          e = e.substring(r.raw.length), t.push(r);
+          continue;
+        }
+        if (r = this.tokenizer.heading(e)) {
+          e = e.substring(r.raw.length), t.push(r);
+          continue;
+        }
+        if (r = this.tokenizer.hr(e)) {
+          e = e.substring(r.raw.length), t.push(r);
+          continue;
+        }
+        if (r = this.tokenizer.blockquote(e)) {
+          e = e.substring(r.raw.length), t.push(r);
+          continue;
+        }
+        if (r = this.tokenizer.list(e)) {
+          e = e.substring(r.raw.length), t.push(r);
+          continue;
+        }
+        if (r = this.tokenizer.html(e)) {
+          e = e.substring(r.raw.length), t.push(r);
+          continue;
+        }
+        if (r = this.tokenizer.def(e)) {
+          e = e.substring(r.raw.length);
+          let s = t.at(-1);
+          s?.type === "paragraph" || s?.type === "text" ? (s.raw += (s.raw.endsWith(`
+`) ? "" : `
+`) + r.raw, s.text += `
+` + r.raw, this.inlineQueue.at(-1).src = s.text) : this.tokens.links[r.tag] || (this.tokens.links[r.tag] = { href: r.href, title: r.title }, t.push(r));
+          continue;
+        }
+        if (r = this.tokenizer.table(e)) {
+          e = e.substring(r.raw.length), t.push(r);
+          continue;
+        }
+        if (r = this.tokenizer.lheading(e)) {
+          e = e.substring(r.raw.length), t.push(r);
+          continue;
+        }
+        let o = e;
+        if (this.options.extensions?.startBlock) {
+          let s = 1 / 0, l = e.slice(1), u;
+          this.options.extensions.startBlock.forEach((c) => {
+            u = c.call({ lexer: this }, l), typeof u == "number" && u >= 0 && (s = Math.min(s, u));
+          }), s < 1 / 0 && s >= 0 && (o = e.substring(0, s + 1));
+        }
+        if (this.state.top && (r = this.tokenizer.paragraph(o))) {
+          let s = t.at(-1);
+          n && s?.type === "paragraph" ? (s.raw += (s.raw.endsWith(`
+`) ? "" : `
+`) + r.raw, s.text += `
+` + r.text, this.inlineQueue.pop(), this.inlineQueue.at(-1).src = s.text) : t.push(r), n = o.length !== e.length, e = e.substring(r.raw.length);
+          continue;
+        }
+        if (r = this.tokenizer.text(e)) {
+          e = e.substring(r.raw.length);
+          let s = t.at(-1);
+          s?.type === "text" ? (s.raw += (s.raw.endsWith(`
+`) ? "" : `
+`) + r.raw, s.text += `
+` + r.text, this.inlineQueue.pop(), this.inlineQueue.at(-1).src = s.text) : t.push(r);
+          continue;
+        }
+        if (e) {
+          this.infiniteLoopError(e.charCodeAt(0));
+          break;
+        }
+      }
+      return this.state.top = true, t;
+    }
+    inline(e, t = []) {
+      return this.inlineQueue.push({ src: e, tokens: t }), t;
+    }
+    linkInText(e) {
+      if (!e.includes("[")) return false;
+      let t = this.tokenizer.rules.inline.link;
+      for (let n of e.matchAll(this.tokenizer.rules.inline.blockSkip)) if (t.test(n[0]) && e.charAt(n.index - 1) !== "!") return true;
+      for (let n of e.matchAll(this.tokenizer.rules.inline.reflinkSearch)) {
+        let i = n[0], r = i.lastIndexOf("[");
+        if (!(i.charAt(0) === "!" || !Object.hasOwn(this.tokens.links, v(i.slice(r + 1, -1)))) && !(r > 1 && this.linkInText(i.slice(1, r - 1)))) return true;
+      }
+      return false;
+    }
+    inlineTokens(e, t = []) {
+      this.tokenizer.lexer = this;
+      let n = this.state.linkParenPossible;
+      this.state.linkParenPossible = n && e.includes(")");
+      try {
+        return this.#e(e, t);
+      } finally {
+        this.state.linkParenPossible = n;
+      }
+    }
+    #e(e, t) {
+      let n = e;
+      if (this.tokens.links && e.includes("[")) {
+        let s = this.tokenizer.rules.inline.reflinkSearch, l = (u) => {
+          let c = u.lastIndexOf("[");
+          if (!Object.hasOwn(this.tokens.links, v(u.slice(c + 1, -1)))) return u;
+          if (c > 1 && u.charAt(0) !== "!") {
+            let p = u.slice(1, c - 1);
+            if (this.linkInText(p)) return "[" + p.replace(s, l) + "][" + "a".repeat(u.length - c - 2) + "]";
+          }
+          return "[" + "a".repeat(u.length - 2) + "]";
+        };
+        n = n.replace(s, l);
+      }
+      n = n.replace(this.tokenizer.rules.inline.anyPunctuationOutsideCode, (s, l, u) => u ? "+".repeat(s.length) : l ? l + s.slice(l.length, -l.length).replace(/`/g, "+") + l : s), n = n.replace(this.tokenizer.rules.inline.blockSkip, (s, l, u) => {
+        let c = u ? u.length : 0;
+        return s.slice(0, c) + "[" + "a".repeat(s.length - c - 2) + "]";
+      }), n = this.options.hooks?.emStrongMask?.call({ lexer: this }, n) ?? n;
+      let i = false, r = "", o = 1 / 0;
+      for (; e; ) {
+        if (e.length < o) o = e.length;
+        else {
+          this.infiniteLoopError(e.charCodeAt(0));
+          break;
+        }
+        i || (r = ""), i = false;
+        let s;
+        if (this.options.extensions?.inline?.some((u) => (s = u.call({ lexer: this }, e, t)) ? (e = e.substring(s.raw.length), t.push(s), true) : false)) continue;
+        if (s = this.tokenizer.escape(e)) {
+          e = e.substring(s.raw.length), t.push(s);
+          continue;
+        }
+        if (s = this.tokenizer.tag(e)) {
+          e = e.substring(s.raw.length), t.push(s);
+          continue;
+        }
+        if (s = this.tokenizer.link(e)) {
+          e = e.substring(s.raw.length), t.push(s);
+          continue;
+        }
+        if (s = this.tokenizer.reflink(e, this.tokens.links)) {
+          e = e.substring(s.raw.length);
+          let u = t.at(-1);
+          s.type === "text" && u?.type === "text" ? (u.raw += s.raw, u.text += s.text) : t.push(s);
+          continue;
+        }
+        if (s = this.tokenizer.emStrong(e, n, r)) {
+          e = e.substring(s.raw.length), t.push(s);
+          continue;
+        }
+        if (s = this.tokenizer.codespan(e)) {
+          e = e.substring(s.raw.length), t.push(s);
+          continue;
+        }
+        if (s = this.tokenizer.br(e)) {
+          e = e.substring(s.raw.length), t.push(s);
+          continue;
+        }
+        if (s = this.tokenizer.del(e, n, r)) {
+          e = e.substring(s.raw.length), t.push(s);
+          continue;
+        }
+        if (s = this.tokenizer.autolink(e)) {
+          e = e.substring(s.raw.length), t.push(s);
+          continue;
+        }
+        if (!this.state.inLink && (s = this.tokenizer.url(e))) {
+          e = e.substring(s.raw.length), t.push(s);
+          continue;
+        }
+        let l = e;
+        if (this.options.extensions?.startInline) {
+          let u = 1 / 0, c = e.slice(1), p;
+          this.options.extensions.startInline.forEach((d) => {
+            p = d.call({ lexer: this }, c), typeof p == "number" && p >= 0 && (u = Math.min(u, p));
+          }), u < 1 / 0 && u >= 0 && (l = e.substring(0, u + 1));
+        }
+        if (s = this.tokenizer.inlineText(l)) {
+          e = e.substring(s.raw.length), s.raw.slice(-1) !== "_" && (r = s.raw.slice(-1)), i = true;
+          let u = t.at(-1);
+          u?.type === "text" ? (u.raw += s.raw, u.text += s.text) : t.push(s);
+          continue;
+        }
+        if (e) {
+          this.infiniteLoopError(e.charCodeAt(0));
+          break;
+        }
+      }
+      return t;
+    }
+    infiniteLoopError(e) {
+      let t = "Infinite loop on byte: " + e;
+      if (this.options.silent) console.error(t);
+      else throw new Error(t);
+    }
+  };
+  var $ = class {
+    options;
+    parser;
+    constructor(e) {
+      this.options = e || y;
+    }
+    space(e) {
+      return "";
+    }
+    code({ text: e, lang: t, escaped: n }) {
+      let i = (t || "").match(x.notSpaceStart)?.[0], r = e ? e.replace(x.endingNewline, "") + `
+` : "";
+      return i ? '<pre><code class="language-' + w(i) + '">' + (n ? r : w(r, true)) + `</code></pre>
+` : "<pre><code>" + (n ? r : w(r, true)) + `</code></pre>
+`;
+    }
+    blockquote({ tokens: e }) {
+      return `<blockquote>
+${this.parser.parse(e)}</blockquote>
+`;
+    }
+    html({ text: e }) {
+      return e;
+    }
+    def(e) {
+      return "";
+    }
+    heading({ tokens: e, depth: t }) {
+      return `<h${t}>${this.parser.parseInline(e)}</h${t}>
+`;
+    }
+    hr(e) {
+      return `<hr>
+`;
+    }
+    list(e) {
+      let t = e.ordered, n = e.start, i = "";
+      for (let s = 0; s < e.items.length; s++) {
+        let l = e.items[s];
+        i += this.listitem(l);
+      }
+      let r = t ? "ol" : "ul", o = t && n !== 1 ? ' start="' + n + '"' : "";
+      return "<" + r + o + `>
+` + i + "</" + r + `>
+`;
+    }
+    listitem(e) {
+      return `<li>${this.parser.parse(e.tokens)}</li>
+`;
+    }
+    checkbox({ checked: e }) {
+      return "<input " + (e ? 'checked="" ' : "") + 'disabled="" type="checkbox"> ';
+    }
+    paragraph({ tokens: e }) {
+      return `<p>${this.parser.parseInline(e)}</p>
+`;
+    }
+    table(e) {
+      let t = "", n = "";
+      for (let r = 0; r < e.header.length; r++) n += this.tablecell(e.header[r]);
+      t += this.tablerow({ text: n });
+      let i = "";
+      for (let r = 0; r < e.rows.length; r++) {
+        let o = e.rows[r];
+        n = "";
+        for (let s = 0; s < o.length; s++) n += this.tablecell(o[s]);
+        i += this.tablerow({ text: n });
+      }
+      return i && (i = `<tbody>${i}</tbody>`), `<table>
+<thead>
+` + t + `</thead>
+` + i + `</table>
+`;
+    }
+    tablerow({ text: e }) {
+      return `<tr>
+${e}</tr>
+`;
+    }
+    tablecell(e) {
+      let t = this.parser.parseInline(e.tokens), n = e.header ? "th" : "td";
+      return (e.align ? `<${n} align="${e.align}">` : `<${n}>`) + t + `</${n}>
+`;
+    }
+    strong({ tokens: e }) {
+      return `<strong>${this.parser.parseInline(e)}</strong>`;
+    }
+    em({ tokens: e }) {
+      return `<em>${this.parser.parseInline(e)}</em>`;
+    }
+    codespan({ text: e }) {
+      return `<code>${w(e, true)}</code>`;
+    }
+    br(e) {
+      return "<br>";
+    }
+    del({ tokens: e }) {
+      return `<del>${this.parser.parseInline(e)}</del>`;
+    }
+    link({ href: e, title: t, text: n, tokens: i, autolink: r }) {
+      let o = r ? w(n, true) : this.parser.parseInline(i), s = ie(e);
+      if (s === null) return o;
+      e = w(s, r);
+      let l = '<a href="' + e + '"';
+      return t && (l += ' title="' + w(t) + '"'), l += ">" + o + "</a>", l;
+    }
+    image({ href: e, title: t, text: n, tokens: i }) {
+      i && (n = this.parser.parseInline(i, this.parser.textRenderer));
+      let r = ie(e);
+      if (r === null) return w(n);
+      e = r;
+      let o = `<img src="${w(e)}" alt="${w(n)}"`;
+      return t && (o += ` title="${w(t)}"`), o += ">", o;
+    }
+    text(e) {
+      return "tokens" in e && e.tokens ? this.parser.parseInline(e.tokens) : "escaped" in e && e.escaped ? e.text : w(e.text);
+    }
+  };
+  var z = class {
+    strong({ text: e }) {
+      return e;
+    }
+    em({ text: e }) {
+      return e;
+    }
+    codespan({ text: e }) {
+      return e;
+    }
+    del({ text: e }) {
+      return e;
+    }
+    html({ text: e }) {
+      return e;
+    }
+    text({ text: e }) {
+      return e;
+    }
+    link({ text: e }) {
+      return "" + e;
+    }
+    image({ text: e }) {
+      return "" + e;
+    }
+    br() {
+      return "";
+    }
+    checkbox({ raw: e }) {
+      return e;
+    }
+  };
+  var O = class a2 {
+    options;
+    renderer;
+    textRenderer;
+    constructor(e) {
+      this.options = e || y, this.options.renderer = this.options.renderer || new $(), this.renderer = this.options.renderer, this.renderer.options = this.options, this.renderer.parser = this, this.textRenderer = new z();
+    }
+    static parse(e, t) {
+      return new a2(t).parse(e);
+    }
+    static parseInline(e, t) {
+      return new a2(t).parseInline(e);
+    }
+    parse(e) {
+      this.renderer.parser = this;
+      let t = "";
+      for (let n = 0; n < e.length; n++) {
+        let i = e[n];
+        if (this.options.extensions?.renderers?.[i.type]) {
+          let o = i, s = this.options.extensions.renderers[o.type].call({ parser: this }, o);
+          if (s !== false || !["space", "hr", "heading", "code", "table", "blockquote", "list", "checkbox", "html", "def", "paragraph", "text"].includes(o.type)) {
+            t += s || "";
+            continue;
+          }
+        }
+        let r = i;
+        switch (r.type) {
+          case "space": {
+            t += this.renderer.space(r);
+            break;
+          }
+          case "hr": {
+            t += this.renderer.hr(r);
+            break;
+          }
+          case "heading": {
+            t += this.renderer.heading(r);
+            break;
+          }
+          case "code": {
+            t += this.renderer.code(r);
+            break;
+          }
+          case "table": {
+            t += this.renderer.table(r);
+            break;
+          }
+          case "blockquote": {
+            t += this.renderer.blockquote(r);
+            break;
+          }
+          case "list": {
+            t += this.renderer.list(r);
+            break;
+          }
+          case "checkbox": {
+            t += this.renderer.checkbox(r);
+            break;
+          }
+          case "html": {
+            t += this.renderer.html(r);
+            break;
+          }
+          case "def": {
+            t += this.renderer.def(r);
+            break;
+          }
+          case "paragraph": {
+            t += this.renderer.paragraph(r);
+            break;
+          }
+          case "text": {
+            t += this.renderer.text(r);
+            break;
+          }
+          default: {
+            let o = 'Token with "' + r.type + '" type was not found.';
+            if (this.options.silent) return console.error(o), "";
+            throw new Error(o);
+          }
+        }
+      }
+      return t;
+    }
+    parseInline(e, t = this.renderer) {
+      this.renderer.parser = this;
+      let n = "";
+      for (let i = 0; i < e.length; i++) {
+        let r = e[i];
+        if (this.options.extensions?.renderers?.[r.type]) {
+          let s = this.options.extensions.renderers[r.type].call({ parser: this }, r);
+          if (s !== false || !["escape", "html", "link", "image", "checkbox", "strong", "em", "codespan", "br", "del", "text"].includes(r.type)) {
+            n += s || "";
+            continue;
+          }
+        }
+        let o = r;
+        switch (o.type) {
+          case "escape": {
+            n += t.text(o);
+            break;
+          }
+          case "html": {
+            n += t.html(o);
+            break;
+          }
+          case "link": {
+            n += t.link(o);
+            break;
+          }
+          case "image": {
+            n += t.image(o);
+            break;
+          }
+          case "checkbox": {
+            n += t.checkbox(o);
+            break;
+          }
+          case "strong": {
+            n += t.strong(o);
+            break;
+          }
+          case "em": {
+            n += t.em(o);
+            break;
+          }
+          case "codespan": {
+            n += t.codespan(o);
+            break;
+          }
+          case "br": {
+            n += t.br(o);
+            break;
+          }
+          case "del": {
+            n += t.del(o);
+            break;
+          }
+          case "text": {
+            n += t.text(o);
+            break;
+          }
+          default: {
+            let s = 'Token with "' + o.type + '" type was not found.';
+            if (this.options.silent) return console.error(s), "";
+            throw new Error(s);
+          }
+        }
+      }
+      return n;
+    }
+  };
+  var L = class {
+    options;
+    block;
+    constructor(e) {
+      this.options = e || y;
+    }
+    static passThroughHooks = /* @__PURE__ */ new Set(["preprocess", "postprocess", "processAllTokens", "emStrongMask"]);
+    static passThroughHooksRespectAsync = /* @__PURE__ */ new Set(["preprocess", "postprocess", "processAllTokens"]);
+    preprocess(e) {
+      return e;
+    }
+    postprocess(e) {
+      return e;
+    }
+    processAllTokens(e) {
+      return e;
+    }
+    emStrongMask(e) {
+      return e;
+    }
+    provideLexer(e = this.block) {
+      return e ? T.lex : T.lexInline;
+    }
+    provideParser(e = this.block) {
+      return e ? O.parse : O.parseInline;
+    }
+  };
+  function C(a3, e) {
+    if (Array.isArray(e)) for (let t = 0; t < e.length; t++) a3.push(e[t]);
+    else a3.push(e);
+  }
+  var U = class {
+    defaults = B();
+    options = this.setOptions;
+    parse = this.parseMarkdown(true);
+    parseInline = this.parseMarkdown(false);
+    Parser = O;
+    Renderer = $;
+    TextRenderer = z;
+    Lexer = T;
+    Tokenizer = _;
+    Hooks = L;
+    constructor(...e) {
+      this.use(...e);
+    }
+    walkTokens(e, t) {
+      let n = [];
+      for (let i of e) switch (C(n, t.call(this, i)), i.type) {
+        case "table": {
+          let r = i;
+          for (let o of r.header) C(n, this.walkTokens(o.tokens, t));
+          for (let o of r.rows) for (let s of o) C(n, this.walkTokens(s.tokens, t));
+          break;
+        }
+        case "list": {
+          let r = i;
+          C(n, this.walkTokens(r.items, t));
+          break;
+        }
+        default: {
+          let r = i;
+          this.defaults.extensions?.childTokens?.[r.type] ? this.defaults.extensions.childTokens[r.type].forEach((o) => {
+            let s = r[o].flat(1 / 0);
+            C(n, this.walkTokens(s, t));
+          }) : r.tokens && C(n, this.walkTokens(r.tokens, t));
+        }
+      }
+      return n;
+    }
+    use(...e) {
+      let t = this.defaults.extensions || { renderers: {}, childTokens: {} };
+      return e.forEach((n) => {
+        let i = { ...n };
+        if (i.async = this.defaults.async || i.async || false, n.extensions && (n.extensions.forEach((r) => {
+          if (!r.name) throw new Error("extension name required");
+          if ("renderer" in r) {
+            let o = t.renderers[r.name];
+            o ? t.renderers[r.name] = function(...s) {
+              let l = r.renderer.apply(this, s);
+              return l === false && (l = o.apply(this, s)), l;
+            } : t.renderers[r.name] = r.renderer;
+          }
+          if ("tokenizer" in r) {
+            if (!r.level || r.level !== "block" && r.level !== "inline") throw new Error("extension level must be 'block' or 'inline'");
+            let o = t[r.level];
+            o ? o.unshift(r.tokenizer) : t[r.level] = [r.tokenizer], r.start && (r.level === "block" ? t.startBlock ? t.startBlock.push(r.start) : t.startBlock = [r.start] : r.level === "inline" && (t.startInline ? t.startInline.push(r.start) : t.startInline = [r.start]));
+          }
+          "childTokens" in r && r.childTokens && (t.childTokens[r.name] = r.childTokens);
+        }), i.extensions = t), n.renderer) {
+          let r = this.defaults.renderer || new $(this.defaults);
+          for (let o in n.renderer) {
+            if (!(o in r)) throw new Error(`renderer '${o}' does not exist`);
+            if (["options", "parser"].includes(o)) continue;
+            let s = o, l = n.renderer[s], u = r[s];
+            r[s] = (...c) => {
+              let p = l.apply(r, c);
+              return p === false && (p = u.apply(r, c)), p || "";
+            };
+          }
+          i.renderer = r;
+        }
+        if (n.tokenizer) {
+          let r = this.defaults.tokenizer || new _(this.defaults);
+          for (let o in n.tokenizer) {
+            if (!(o in r)) throw new Error(`tokenizer '${o}' does not exist`);
+            if (["options", "rules", "lexer"].includes(o)) continue;
+            let s = o, l = n.tokenizer[s], u = r[s];
+            r[s] = (...c) => {
+              let p = l.apply(r, c);
+              return p === false && (p = u.apply(r, c)), p;
+            };
+          }
+          i.tokenizer = r;
+        }
+        if (n.hooks) {
+          let r = this.defaults.hooks || new L();
+          for (let o in n.hooks) {
+            if (!(o in r)) throw new Error(`hook '${o}' does not exist`);
+            if (["options", "block"].includes(o)) continue;
+            let s = o, l = n.hooks[s], u = r[s];
+            L.passThroughHooks.has(o) ? r[s] = (c) => {
+              if (this.defaults.async && L.passThroughHooksRespectAsync.has(o)) return (async () => {
+                let d = await l.call(r, c);
+                return u.call(r, d);
+              })();
+              let p = l.call(r, c);
+              return u.call(r, p);
+            } : r[s] = (...c) => {
+              if (this.defaults.async) return (async () => {
+                let d = await l.apply(r, c);
+                return d === false && (d = await u.apply(r, c)), d;
+              })();
+              let p = l.apply(r, c);
+              return p === false && (p = u.apply(r, c)), p;
+            };
+          }
+          i.hooks = r;
+        }
+        if (n.walkTokens) {
+          let r = this.defaults.walkTokens, o = n.walkTokens;
+          i.walkTokens = function(s) {
+            let l = [];
+            return l.push(o.call(this, s)), r && C(l, r.call(this, s)), l;
+          };
+        }
+        this.defaults = { ...this.defaults, ...i };
+      }), this;
+    }
+    setOptions(e) {
+      return this.defaults = { ...this.defaults, ...e }, this;
+    }
+    lexer(e, t) {
+      return T.lex(e, t ?? this.defaults);
+    }
+    parser(e, t) {
+      return O.parse(e, t ?? this.defaults);
+    }
+    parseMarkdown(e) {
+      return (n, i) => {
+        let r = { ...i }, o = { ...this.defaults, ...r }, s = this.onError(!!o.silent, !!o.async);
+        if (this.defaults.async === true && r.async === false) return s(new Error("marked(): The async option was set to true by an extension. Remove async: false from the parse options object to return a Promise."));
+        if (typeof n > "u" || n === null) return s(new Error("marked(): input parameter is undefined or null"));
+        if (typeof n != "string") return s(new Error("marked(): input parameter is of type " + Object.prototype.toString.call(n) + ", string expected"));
+        if (o.hooks && (o.hooks.options = o, o.hooks.block = e), o.async) return (async () => {
+          let l = o.hooks ? await o.hooks.preprocess(n) : n, c = await (o.hooks ? await o.hooks.provideLexer(e) : e ? T.lex : T.lexInline)(l, o), p = o.hooks ? await o.hooks.processAllTokens(c) : c;
+          o.walkTokens && await Promise.all(this.walkTokens(p, o.walkTokens));
+          let g = await (o.hooks ? await o.hooks.provideParser(e) : e ? O.parse : O.parseInline)(p, o);
+          return o.hooks ? await o.hooks.postprocess(g) : g;
+        })().catch(s);
+        try {
+          o.hooks && (n = o.hooks.preprocess(n));
+          let u = (o.hooks ? o.hooks.provideLexer(e) : e ? T.lex : T.lexInline)(n, o);
+          o.hooks && (u = o.hooks.processAllTokens(u)), o.walkTokens && this.walkTokens(u, o.walkTokens);
+          let p = (o.hooks ? o.hooks.provideParser(e) : e ? O.parse : O.parseInline)(u, o);
+          return o.hooks && (p = o.hooks.postprocess(p)), p;
+        } catch (l) {
+          return s(l);
+        }
+      };
+    }
+    onError(e, t) {
+      return (n) => {
+        if (n.message += `
+Please report this to https://github.com/markedjs/marked.`, e) {
+          let i = "<p>An error occurred:</p><pre>" + w(n.message + "", true) + "</pre>";
+          return t ? Promise.resolve(i) : i;
+        }
+        if (t) return Promise.reject(n);
+        throw n;
+      };
+    }
+  };
+  var I = new U();
+  function f(a3, e) {
+    return I.parse(a3, e);
+  }
+  f.options = f.setOptions = function(a3) {
+    return I.setOptions(a3), f.defaults = I.defaults, V(f.defaults), f;
+  };
+  f.getDefaults = B;
+  f.defaults = y;
+  function At(...a3) {
+    return I.use(...a3), f.defaults = I.defaults, V(f.defaults), f;
+  }
+  f.use = At;
+  f.walkTokens = function(a3, e) {
+    return I.walkTokens(a3, e);
+  };
+  f.parseInline = I.parseInline;
+  f.Parser = O;
+  f.parser = O.parse;
+  f.Renderer = $;
+  f.TextRenderer = z;
+  f.Lexer = T;
+  f.lexer = T.lex;
+  f.Tokenizer = _;
+  f.Hooks = L;
+  f.parse = f;
+  var Rn = f.options;
+  var Tn = f.setOptions;
+  var On = f.walkTokens;
+  var wn = f.parseInline;
+  var yn = O.parse;
+  var Sn = T.lex;
+
+  // src/description-markdown.js
+  var parser = new U({
+    gfm: true,
+    breaks: true,
+    extensions: [{
+      name: "underline",
+      level: "inline",
+      start: (text) => text.indexOf("++"),
+      tokenizer(source) {
+        const match = /^\+\+(?!\s)((?:\\[^\n]|\+(?!\+)|[^+\\\n])+?)(?<!\s)\+\+(?!\+)/.exec(source);
+        if (!match) return;
+        return { type: "underline", raw: match[0], tokens: this.lexer.inlineTokens(match[1]) };
+      }
+    }]
+  });
+  var inlineTags = { strong: "strong", em: "em", underline: "u", del: "del" };
+  var node = (tag, children = [], attributes = {}) => ({ tag, children, attributes });
+  function descriptionLink(raw) {
+    const href = decodeHTML(String(raw ?? ""));
+    if (!/^https:\/\//i.test(href) || /[\s\\]/u.test(href)) return null;
+    try {
+      const url = new URL(href);
+      return url.protocol === "https:" && !url.username && !url.password ? url.href : null;
+    } catch {
+      return null;
+    }
+  }
+  function describeTokens(tokens, depth = 0) {
+    return tokens.flatMap((token) => {
+      if (depth >= 48) return [token.raw ?? ""];
+      const children = () => describeTokens(token.tokens ?? [], depth + 1);
+      if (Object.hasOwn(inlineTags, token.type)) return [node(inlineTags[token.type], children())];
+      switch (token.type) {
+        case "space":
+        case "def":
+          return [];
+        case "paragraph":
+          return [node("p", children())];
+        case "br":
+          return [node("br")];
+        case "text":
+          return token.tokens ? children() : [decodeHTML(token.text)];
+        case "escape":
+          return [token.text];
+        case "list": {
+          const items = token.items.map((item) => node("li", describeTokens(item.tokens, depth + 1)));
+          return [token.ordered ? node("ol", items, { start: token.start }) : node("ul", items)];
+        }
+        case "link": {
+          const href = descriptionLink(token.href);
+          return href ? [node("a", children(), { href, rel: "noopener noreferrer", target: "_blank" })] : children();
+        }
+        case "image":
+          return [decodeHTML(token.text ?? "")];
+        case "html":
+          return [token.raw];
+        default:
+          return [token.raw ?? token.text ?? ""];
+      }
+    });
+  }
+  var cache = /* @__PURE__ */ new Map();
+  function parseDescriptionMarkdown(text) {
+    if (cache.has(text)) return cache.get(text);
+    let result;
+    try {
+      result = text.length > 1e5 ? [text] : describeTokens(parser.lexer(text));
+    } catch {
+      result = [text];
+    }
+    if (text.length <= 32e3) {
+      if (cache.size >= 16) cache.delete(cache.keys().next().value);
+      cache.set(text, result);
+    }
+    return result;
+  }
+  function descriptionPlainText(text, markdown) {
+    if (!markdown) return text;
+    const flatten = (item) => {
+      if (typeof item === "string") return item;
+      if (item.tag === "br") return "\n";
+      const contents = item.children.map(flatten).join("");
+      if (item.tag === "li") return `\u2022 ${contents}
+`;
+      return contents + (["p", "ol", "ul"].includes(item.tag) ? "\n" : "");
+    };
+    return parseDescriptionMarkdown(text).map(flatten).join("").trim();
+  }
+  function nodeStyle(tag) {
+    switch (tag) {
+      case "p":
+        return { margin: "0 0 .65em" };
+      case "ul":
+        return { margin: "0 0 .65em", paddingInlineStart: "1.5em", listStyleType: "disc" };
+      case "ol":
+        return { margin: "0 0 .65em", paddingInlineStart: "1.5em", listStyleType: "decimal" };
+      case "li":
+        return { display: "list-item" };
+      case "a":
+        return { color: "inherit", textDecoration: "underline" };
+      default:
+        return {};
+    }
+  }
+  function markdownPreview(text, h2, link) {
+    const render = (item, key) => {
+      if (typeof item === "string") return item;
+      const children = item.children.map(render);
+      if (item.tag === "a") return link(item.attributes.href, children, key);
+      return h2(item.tag, { ...item.attributes, key, style: nodeStyle(item.tag) }, ...children);
+    };
+    return parseDescriptionMarkdown(text).map(render);
+  }
+  var rendered = /* @__PURE__ */ new WeakMap();
+  function paintDescription(body, text, markdown, openLink) {
+    if (!body) return;
+    const previous = rendered.get(body);
+    if (previous?.text === text && previous?.markdown === markdown && body.firstChild === previous.first) return;
+    if (!markdown) {
+      if (body.textContent !== text || previous?.markdown) body.textContent = text;
+    } else {
+      const doc = body.ownerDocument;
+      const create = (item) => {
+        if (typeof item === "string") return doc.createTextNode(item);
+        const element = doc.createElement(item.tag);
+        for (const [name, value] of Object.entries(item.attributes)) element.setAttribute(name, value);
+        Object.assign(element.style, nodeStyle(item.tag));
+        if (item.tag === "a") {
+          element.setAttribute("data-titledeck-description-link", "");
+          element.addEventListener("vgp_onbuttondown", (event) => {
+            if (event.detail?.button !== 1 || event.detail?.is_repeat) return;
+            event.preventDefault();
+            event.stopPropagation();
+            element.click();
+          });
+          element.addEventListener("click", (event) => {
+            if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+            if (openLink(item.attributes.href)) event.preventDefault();
+          });
+        }
+        for (const child of item.children) element.appendChild(create(child));
+        return element;
+      };
+      const fragment = doc.createDocumentFragment();
+      for (const item of parseDescriptionMarkdown(text)) fragment.appendChild(create(item));
+      body.replaceChildren(fragment);
+    }
+    rendered.set(body, { text, markdown, first: body.firstChild });
+  }
+  var navigation = /* @__PURE__ */ new WeakMap();
+  function clearDescriptionLinkNavigation(panel) {
+    const entry = navigation.get(panel);
+    if (!entry) return;
+    navigation.delete(panel);
+    for (const child of entry.nodes) {
+      try {
+        child.OnUnmount();
+      } catch {
+      }
+    }
+  }
+  function updateDescriptionLinkNavigation(panel, trees) {
+    const links = [...panel?.querySelectorAll?.("[data-titledeck-description-link]") ?? []];
+    const current = navigation.get(panel);
+    if (current?.nodes.length === links.length && links.every((link, i) => link === current.links[i]) && current.parent.Element?.isConnected) return;
+    clearDescriptionLinkNavigation(panel);
+    if (!panel?.isConnected || !links.length) return;
+    const ancestors = /* @__PURE__ */ new Map();
+    for (let el = panel.parentElement; el; el = el.parentElement) ancestors.set(el, ancestors.size);
+    const pending = [...trees ?? []];
+    const seen = /* @__PURE__ */ new Set();
+    let parent, distance = Infinity;
+    const nodes = pending.flatMap((tree) => [tree?.Root]);
+    while (nodes.length && seen.size < 3500) {
+      const candidate = nodes.pop();
+      if (!candidate || seen.has(candidate)) continue;
+      seen.add(candidate);
+      const depth = ancestors.get(candidate.Element);
+      if (depth !== void 0 && depth < distance && typeof candidate.Tree?.CreateNode === "function") {
+        parent = candidate;
+        distance = depth;
+        if (!depth) break;
+      }
+      for (const child of candidate.m_rgChildren ?? []) nodes.push(child);
+    }
+    if (!parent) return;
+    const entry = { parent, nodes: [], links };
+    navigation.set(panel, entry);
+    try {
+      for (const link of links) {
+        const child = parent.Tree.CreateNode(parent, void 0);
+        entry.nodes.push(child);
+        child.SetProperties({ focusable: true, noFocusRing: true, onOKActionDescription: "Open link" });
+        child.OnMount(link);
+      }
+    } catch {
+      clearDescriptionLinkNavigation(panel);
+    }
+  }
+  return __toCommonJS(description_markdown_exports);
+})();
+
+const { clearDescriptionLinkNavigation, descriptionPlainText, markdownPreview, paintDescription,
+  updateDescriptionLinkNavigation } = titleDeckMarkdown;
+
 /** TitleDeck: source frontend for the Decky Quick Menu, Full Library Manager and Steam Home integration. */
-const PLUGIN = 'TitleDeck', PLUGIN_VERSION = '1.4.0', ROUTE = '/titledeck/manager';
+const PLUGIN = 'TitleDeck', PLUGIN_VERSION = '1.5.0-beta.1', ROUTE = '/titledeck/manager';
 // Private developer opt-in. Normal users never see scan controls or timing logs;
 // the bounded timing recorder remains available for future Steam UI regressions.
 export function developerDiagnosticsEnabled(){
@@ -8,6 +2067,21 @@ export function developerDiagnosticsEnabled(){
 const R = globalThis.SP_REACT;
 const UI = globalThis.DFL;
 const h = (...a) => R.createElement(...a);
+const isMarkdownDescription = (state, id) => state?.description_formats?.[id] === 'markdown';
+function registerDescriptionLinks(panel) {
+  try { updateDescriptionLinkNavigation(panel, UI?.getGamepadNavigationTrees?.() || []); } catch {}
+}
+function openDescriptionLink(url, host = globalThis) {
+  if (typeof UI?.Navigation?.NavigateToExternalWeb === 'function') {
+    UI.Navigation.NavigateToExternalWeb(url);
+    return true;
+  }
+  if (typeof host?.SteamClient?.System?.OpenExternalBrowser === 'function') {
+    host.SteamClient.System.OpenExternalBrowser(url);
+    return true;
+  }
+  return false;
+}
 const QAM_VERSION_STYLE = {display:'inline-flex',alignItems:'center',fontSize:10,fontWeight:800,color:'#e9eef6',background:'#384257',border:'1px solid #7d8aa5',borderRadius:99,padding:'3px 7px',lineHeight:1};
 // Stable user ID keeps the avatar link intact if the GitHub handle changes.
 const DEVELOPER_GITHUB_URL='https://github.com/ValentineBSAA';
@@ -34,7 +2108,7 @@ let pendingContextGame=null;
 let steamDocument = null;
 let steamBridgeStatus = "Waiting for Steam window";
 const STEAM_ANCHOR = "TitleDeckSteamTextBridge";
-let latestState = { schema:1, enabled:true, home_menu_titles:true, aliases:{}, descriptions:{}, description_position:'below_play', games:[], recovery:{available:false,count:0}, manual_backup:{available:false,count:0} };
+let latestState = { schema:1, enabled:true, home_menu_titles:true, aliases:{}, descriptions:{}, description_formats:{}, description_position:'below_play', games:[], recovery:{available:false,count:0}, manual_backup:{available:false,count:0} };
 const observers = new Set();
 function connect() {
   if (bridge) return bridge;
@@ -48,14 +2122,15 @@ function acceptState(state){
   if(state && typeof state ==='object'){
     // 1.2.5 reuses all valid 1.2.4 art except changed-ID hints migrated by the backend.
     if(state.cover_cache_version===125&&state.cover_cache&&typeof state.cover_cache==='object')hydrateCoverResolutionCache(state.cover_cache);
-    latestState={...latestState,...state};
+    latestState={...latestState,...state,description_formats:state.description_formats??{}};
   }
   observers.forEach(listener=>{try{listener(latestState);}catch{}});
   const aliasesChanged=before.enabled!==latestState.enabled||
     JSON.stringify(before.aliases||{})!==JSON.stringify(latestState.aliases||{});
   const descriptionsChanged=before.enabled!==latestState.enabled||
     before.description_position!==latestState.description_position||
-    JSON.stringify(before.descriptions||{})!==JSON.stringify(latestState.descriptions||{});
+    JSON.stringify(before.descriptions||{})!==JSON.stringify(latestState.descriptions||{})||
+    JSON.stringify(before.description_formats||{})!==JSON.stringify(latestState.description_formats||{});
   if(aliasesChanged)adapter?.runNow();
   if(aliasesChanged||before.home_menu_titles!==latestState.home_menu_titles)homeMenuAdapter?.runNow();
   if(descriptionsChanged){descriptionAdapter?.runNow();nonSteamDescriptionAdapter?.runNow();}
@@ -246,7 +2321,7 @@ export function createTitleAdapter(host,getState,getStore=()=>globalThis.appStor
     if(!el || !el.isConnected)return true;
     // Allow Steam's own game-options dialogs, whose headings can show a title.
     // Keep editable controls, other Decky panels, and unrelated notifications untouched.
-    try{if(el.closest?.('[data-titledeck-ui], [data-titledeck-description], [data-titledeck-exclude], [class*="decky" i], [class*="PluginStore" i], [id*="decky" i], [contenteditable], [role="textbox"], [role="combobox"], input, textarea, script, style, select, option'))return true;}catch{}
+    try{if(el.closest?.('[data-titledeck-ui], [data-titledeck-description], [data-titledeck-gameinfo-description], [data-titledeck-nonsteam-description], [data-titledeck-exclude], [class*="decky" i], [class*="PluginStore" i], [id*="decky" i], [contenteditable], [role="textbox"], [role="combobox"], input, textarea, script, style, select, option'))return true;}catch{}
     const name=String(el.className||'');
     return /(?:decky|notification|toast|tooltip|chat|friendslist)/i.test(name);
   }
@@ -1098,11 +3173,11 @@ export function formatDescriptionGameProbe(probe=getLastDescriptionGameProbe()){
  *  text), retaining its CSS module classes and font/layout inheritance. The
  *  separate TitleDeck blue card is reserved for Below Play/Artwork Footer.
  *  All user text goes through textContent, never HTML or markdown injection. */
-export function createNativeSteamDescriptionPanel(doc,nativeDescription,appid){
+export function createNativeSteamDescriptionPanel(doc,nativeDescription,appid,markdown=false){
   let panel=null;
-  if(nativeDescription?.cloneNode)try{panel=nativeDescription.cloneNode(false)}catch{}
+  if(!markdown&&nativeDescription?.cloneNode)try{panel=nativeDescription.cloneNode(false)}catch{}
   if(!panel){
-    const tag=String(nativeDescription?.tagName||'div').toLowerCase();
+    const tag=markdown?'div':String(nativeDescription?.tagName||'div').toLowerCase();
     panel=doc.createElement(/^(?:div|section|p|article|span)$/.test(tag)?tag:'div');
     if(nativeDescription?.className&&typeof nativeDescription.className==='string')
       panel.className=nativeDescription.className;
@@ -1116,9 +3191,9 @@ export function createNativeSteamDescriptionPanel(doc,nativeDescription,appid){
     // Game Info typography with no plugin-colored background or heading.
     panel.style.cssText='font:inherit;color:inherit;background:transparent;border:0;margin:0;padding:0;';
   }
-  const body=doc.createElement('span');
+  const body=doc.createElement(markdown?'div':'span');
   body.setAttribute('data-titledeck-gameinfo-text','true');
-  body.style.cssText='white-space:pre-wrap;overflow-wrap:anywhere;';
+  body.style.cssText=markdown?'white-space:normal;overflow-wrap:anywhere;':'white-space:pre-wrap;overflow-wrap:anywhere;';
   panel.appendChild(body);
   return panel;
 }
@@ -2984,7 +5059,8 @@ export function createNonSteamGameInfoAdapter(host,getState,getDocuments=()=>[],
        poster, often separated by unrelated React wrappers. Build the ONLY
        presentation row on the already verified native description element.
        This avoids grid placement on Steam-owned common ancestors. */
-    [data-titledeck-nonsteam-live][data-titledeck-nonsteam-side-by-side] {
+    [data-titledeck-nonsteam-side-by-side][data-titledeck-nonsteam-live],
+    [data-titledeck-nonsteam-side-by-side][data-titledeck-nonsteam-description] {
       display:grid !important;
       grid-template-columns:minmax(105px,180px) minmax(0,1fr) !important;
       grid-template-rows:auto !important;
@@ -2996,7 +5072,8 @@ export function createNonSteamGameInfoAdapter(host,getState,getDocuments=()=>[],
       height:auto !important;
       box-sizing:border-box !important;
     }
-    [data-titledeck-nonsteam-live][data-titledeck-nonsteam-side-by-side]::before {
+    [data-titledeck-nonsteam-live][data-titledeck-nonsteam-side-by-side]::before,
+    [data-titledeck-nonsteam-description][data-titledeck-nonsteam-side-by-side] > div {
       grid-column:2 !important;
       grid-row:1 !important;
       min-width:0 !important;
@@ -3012,7 +5089,8 @@ export function createNonSteamGameInfoAdapter(host,getState,getDocuments=()=>[],
       margin:0 !important; padding:0 !important; border:0 !important;
       aspect-ratio:auto !important; visibility:hidden !important;
     }
-    [data-titledeck-nonsteam-live][data-titledeck-nonsteam-side-by-side]::after {
+    [data-titledeck-nonsteam-live][data-titledeck-nonsteam-side-by-side]::after,
+    [data-titledeck-nonsteam-description][data-titledeck-nonsteam-side-by-side]::after {
       content:'';
       display:block;
       grid-column:1 !important;
@@ -3054,7 +5132,32 @@ export function createNonSteamGameInfoAdapter(host,getState,getDocuments=()=>[],
       return message.getAttribute(PAINT_ATTRIBUTE)===text;
     }catch{return false}
   }
+  function showDescription(record,text,updatePlainText=true){
+    if(!record.markdown)
+      return showGuard(record,text)&&(!updatePlainText||replaceText(record.message,text));
+    const {message}=record,doc=message.ownerDocument,parent=message.parentElement;
+    if(!parent?.insertBefore||!ensurePaintGuard(doc))return false;
+    if(!record.richPanel){
+      const panel=doc.createElement('div');
+      panel.setAttribute('data-titledeck-nonsteam-description',record.appid);
+      panel.style.cssText='overflow-wrap:anywhere;min-width:0;';
+      panel.style.color=record.nativeColor;
+      panel.style.fontSize=record.nativeFont;
+      panel.style.lineHeight=record.nativeLine;
+      const body=doc.createElement('div');
+      paintDescription(body,text,true,url=>openDescriptionLink(url,doc.defaultView));
+      panel.appendChild(body);
+      parent.insertBefore(panel,message);
+      record.richPanel=panel;
+    }else paintDescription(record.richPanel.firstChild,text,true,url=>openDescriptionLink(url,doc.defaultView));
+    if(message.style.getPropertyValue('display')!=='none'||message.style.getPropertyPriority('display')!=='important')
+      message.style.setProperty('display','none','important');
+    if(updatePlainText)registerDescriptionLinks(record.richPanel);
+    else clearDescriptionLinkNavigation(record.richPanel);
+    return true;
+  }
   function clearGuard(record){
+    if(record?.markdown)return;
     const message=record?.message;
     try{message?.removeAttribute?.(PAINT_ATTRIBUTE);message?.removeAttribute?.(LAYOUT_ATTRIBUTE)}catch{}
     for(const name of ['--td-nonsteam-color','--td-nonsteam-font','--td-nonsteam-line','--td-nonsteam-poster'])
@@ -3143,13 +5246,14 @@ export function createNonSteamGameInfoAdapter(host,getState,getDocuments=()=>[],
     clearGuard(record); // Reveal native text BEFORE restoring its contents/position.
     // If React reused the node for another shortcut and has already replaced
     // our words with new content, don't overwrite that game's text.
-    if(message?.isConnected&&message.textContent===record.text)
+    if(!record.markdown&&message?.isConnected&&message.textContent===record.text)
       replaceText(message,originalText);
-    else if(!message?.isConnected&&message?.textContent===record.text)
+    else if(!record.markdown&&!message?.isConnected&&message?.textContent===record.text)
       replaceText(message,originalText);
     for(const [name,style] of Object.entries(originalMessageStyle))
       restoreInlineStyle(message,name,style);
     restoreGrid(record);
+    if(record.richPanel){clearDescriptionLinkNavigation(record.richPanel);record.richPanel.remove();}
     current.delete(doc);
   }
   // Stable, in-flow layout: Never make the React-owned description absolute.
@@ -3286,7 +5390,7 @@ export function createNonSteamGameInfoAdapter(host,getState,getDocuments=()=>[],
     for(const {el,old} of record?.gridStyles||[])
       for(const [name,saved] of Object.entries(old))restoreInlineStyle(el,name,saved);
     try{record?.gridGhostNodes?.forEach?.(node=>node.removeAttribute?.(GHOST_ATTRIBUTE))}catch{}
-    if(record){record.gridGhostNodes=[];record.message?.removeAttribute?.(LAYOUT_ATTRIBUTE);record.gridStyles=[];record.gridAnchor=null;record.gridArtChild=null;record.gridTextChild=null;record.nativePosterGrid=null}
+    if(record){record.gridGhostNodes=[];(record.richPanel||record.message)?.removeAttribute?.(LAYOUT_ATTRIBUTE);record.gridStyles=[];record.gridAnchor=null;record.gridArtChild=null;record.gridTextChild=null;record.nativePosterGrid=null}
   }
   function gridRemember(record,el,name,value){
     let entry=record.gridStyles.find(e=>e.el===el);
@@ -3501,7 +5605,7 @@ export function createNonSteamGameInfoAdapter(host,getState,getDocuments=()=>[],
     return {format:'titledeck-layout-v1',records};
   }
   function positionNative(record){
-    const {root,message}=record;
+    const {root}=record,message=record.richPanel||record.message;
     if(!root?.isConnected||!message?.isConnected)return false;
     let art=record.artwork;
     if(!art?.isConnected)art=locateNonSteamArtwork(root,message)?.img||null;
@@ -3589,9 +5693,11 @@ export function createNonSteamGameInfoAdapter(host,getState,getDocuments=()=>[],
     for(const doc of docs()){
       const id=routeId(doc),record=current.get(doc);
       const text=String(saved[id]||'').trim();
+      const markdown=isMarkdownDescription(state,id);
       if(!state.enabled||state.description_position!=='game_info'||!id||!text||
          !isNativeSteamShortcutApp(id,getStore(doc))){restoreRecord(doc);continue}
-      if(record&&(record.appid!==id||!record.message?.isConnected||
+      if(record&&(record.appid!==id||record.markdown!==markdown||!record.message?.isConnected||
+         (record.markdown&&(!record.richPanel?.isConnected||record.richPanel.parentElement!==record.message.parentElement))||
          !record.root?.isConnected||appidFromVisibleGame(record.root)!==id))
         restoreRecord(doc);
       // Community hides Game Info without necessarily unmounting it. Do NOT
@@ -3599,14 +5705,14 @@ export function createNonSteamGameInfoAdapter(host,getState,getDocuments=()=>[],
       // paragraph would expose the generic Valve text before React settles.
       const hidden=current.get(doc);
       if(hidden&&!visible(hidden.root)){
-        if(showGuard(hidden,text)){hidden.text=text;shown++;continue}
+        if(showDescription(hidden,text,false)){hidden.text=text;shown++;continue}
         restoreRecord(doc);continue;
       }
       const active=current.get(doc);
       if(active){
         // The saved text is independent of artwork: NEVER undo the visible
         // paragraph just because a cover is temporarily unmounted or loading.
-        if(!showGuard(active,text)||!replaceText(active.message,text)){
+        if(!showDescription(active,text)){
           restoreRecord(doc);status='Native description paragraph no longer writable';
           continue;
         }
@@ -3642,13 +5748,13 @@ export function createNonSteamGameInfoAdapter(host,getState,getDocuments=()=>[],
       const {root,message}=chosen;
       const art=locateNonSteamArtwork(root,message);
       const originalMessageStyle={};
-      for(const name of touchedStyles)originalMessageStyle[name]=originalInlineStyle(message,name);
+      for(const name of markdown?['display']:touchedStyles)originalMessageStyle[name]=originalInlineStyle(message,name);
       const originalRootStyle=originalInlineStyle(root,'position');
       const nativeCSS=doc.defaultView?.getComputedStyle?.(message);
       const originalPaintVars={};
       for(const key of ['--td-nonsteam-color','--td-nonsteam-font','--td-nonsteam-line'])
         originalPaintVars[key]=originalInlineStyle(message,key);
-      const newRecord={appid:id,root,message,artwork:art?.img||null,originalText:message.textContent,
+      const newRecord={appid:id,root,message,markdown,artwork:art?.img||null,originalText:message.textContent,
         originalMessageStyle,originalRootStyle,originalPaintVars,
         nativeColor:nativeCSS?.color||'#293241',
         nativeFont:nativeCSS?.fontSize||'14px',
@@ -3657,7 +5763,7 @@ export function createNonSteamGameInfoAdapter(host,getState,getDocuments=()=>[],
       try{
         // The paragraph itself is the hard requirement, NOT the cover. Apply
         // custom text synchronously before attempting any artwork layout.
-        if(!showGuard(newRecord,text)||!replaceText(message,text))
+        if(!showDescription(newRecord,text))
           throw Error('Native description not ready');
         current.set(doc,newRecord);shown++;
         // Use stable in-flow grid only when cover and text have a confirmed
@@ -3666,9 +5772,10 @@ export function createNonSteamGameInfoAdapter(host,getState,getDocuments=()=>[],
       }catch{
         // Failed initial placement must NEVER leave a blank Game Info page.
         clearGuard(newRecord);
-        if(message.textContent===text)replaceText(message,newRecord.originalText);
+        if(!markdown&&message.textContent===text)replaceText(message,newRecord.originalText);
         for(const [name,style] of Object.entries(originalMessageStyle))restoreInlineStyle(message,name,style);
         restoreGrid(newRecord);
+        if(newRecord.richPanel){clearDescriptionLinkNavigation(newRecord.richPanel);newRecord.richPanel.remove();}
         status='Native replacement unavailable; original fallback left visible';
       }
     }
@@ -3714,7 +5821,7 @@ export function createNonSteamGameInfoAdapter(host,getState,getDocuments=()=>[],
             if(record?.message &&
               (change.target===record.message.firstChild||
                change.target?.parentElement===record.message))
-              return record.message.textContent!==String(saved[id]).trim();
+              return !record.markdown&&record.message.textContent!==String(saved[id]).trim();
             return isNonSteamFallbackMessage(change.target?.nodeValue||
               change.target?.textContent||'');
           });
@@ -3770,10 +5877,11 @@ export function createNonSteamGameInfoAdapter(host,getState,getDocuments=()=>[],
     if(!state.enabled||state.description_position!=='game_info')return false;
     for(const doc of docs()){
       const rec=current.get(doc),id=routeId(doc);
+      const panel=rec?.richPanel||rec?.message;
       if(!rec||rec.appid!==id||!state.descriptions?.[id]||
-         !rec.message?.isConnected||!visible(rec.message)||
+         !panel?.isConnected||!visible(panel)||
          !isNativeSteamShortcutApp(id,getStore(doc)))continue;
-      const target=findScrollableGameInfo(rec.message);
+      const target=findScrollableGameInfo(panel);
       if(!target)continue;
       const before=Number(target.scrollTop)||0;
       try{target.scrollTop=before+amount*25;}catch{return false}
@@ -4022,7 +6130,7 @@ export function createDescriptionAdapter(host,getState,getDocuments=()=>[],getCl
   function clearGameInfo(doc,keepWarm=false){
     const prior=nativeInfo.get(doc);
     if(!prior){if(!keepWarm)warmPanels.delete(doc);return;}
-    if(keepWarm&&prior.panel)warmPanels.set(doc,{appid:prior.appid,panel:prior.panel});
+    if(keepWarm&&prior.panel)warmPanels.set(doc,{appid:prior.appid,markdown:prior.markdown,panel:prior.panel});
     else warmPanels.delete(doc);
     // A failure restoring one style must not prevent removing the clone.
     const native=prior.nativeNode,style=native?.style;
@@ -4035,6 +6143,7 @@ export function createDescriptionAdapter(host,getState,getDocuments=()=>[],getCl
       try{if(style.display==='none')style.display=''}catch{}
     }
     try{native?.removeAttribute?.('data-titledeck-native-original')}catch{}
+    clearDescriptionLinkNavigation(prior.panel);
     try{prior.panel?.remove?.()}catch{}
     nativeInfo.delete(doc);
   }
@@ -4068,12 +6177,13 @@ export function createDescriptionAdapter(host,getState,getDocuments=()=>[],getCl
     // On a stable game page the existing Steam native node is the source of
     // truth. Never re-identify the original from a DOM containing our styled
     // clone, even if Steam's live class finder changes the match order.
+    const markdown=isMarkdownDescription(getState(),appid);
     let prior=nativeInfo.get(doc);
-    if(prior&&(prior.appid!==appid||!prior.parent?.isConnected||
-      !prior.nativeNode?.isConnected||!prior.panel?.isConnected)){
+    if(prior&&(prior.appid!==appid||prior.markdown!==markdown||!prior.parent?.isConnected||
+      (prior.nativeNode&&!prior.nativeNode.isConnected)||!prior.panel?.isConnected)){
       // Keep the existing filled clone across *this same game's* tab remount;
       // drop it on a route change or explicit Restore Original.
-      const sameApp=prior.appid===appid;
+      const sameApp=prior.appid===appid&&prior.markdown===markdown;
       clearGameInfo(doc,sameApp);prior=null;
     }
     const found=prior?{container:prior.parent,nativeDescription:prior.nativeNode}
@@ -4094,14 +6204,14 @@ export function createDescriptionAdapter(host,getState,getDocuments=()=>[],getCl
     if(!parent?.insertBefore)return false;
     if(!prior){
       const warmed=warmPanels.get(doc);
-      const panel=warmed?.appid===appid&&warmed.panel? warmed.panel:
-        createNativeSteamDescriptionPanel(doc,nativeDescription,appid);
+      const panel=warmed?.appid===appid&&warmed.markdown===markdown&&warmed.panel? warmed.panel:
+        createNativeSteamDescriptionPanel(doc,nativeDescription,appid,markdown);
       warmPanels.delete(doc);
       if(warmed?.appid===appid&&nativeDescription?.className&&
         typeof nativeDescription.className==='string')panel.className=nativeDescription.className;
       // Populate BEFORE the panel is connected or Steam's original text hidden.
       const body=panel.querySelector?.('[data-titledeck-gameinfo-text]')||panel.lastChild;
-      if(body&&body.textContent!==description)body.textContent=description;
+      paintDescription(body,description,markdown,url=>openDescriptionLink(url,doc.defaultView));
       const style=nativeDescription?.style;
       const originalDisplay=style?.display??'';
       const originalDisplayProperty=typeof style?.getPropertyValue==='function'?style.getPropertyValue('display'):null;
@@ -4112,7 +6222,7 @@ export function createDescriptionAdapter(host,getState,getDocuments=()=>[],getCl
         if(typeof style.setProperty==='function')style.setProperty('display','none','important');
         else style.display='none';
       }
-      prior={appid,parent,nativeNode:nativeDescription,originalDisplay,originalDisplayProperty,originalDisplayPriority,panel};
+      prior={appid,markdown,parent,nativeNode:nativeDescription,originalDisplay,originalDisplayProperty,originalDisplayPriority,panel};
       nativeInfo.set(doc,prior);
     }
     if(prior.nativeNode?.style&&typeof prior.nativeNode.style.getPropertyValue==='function'&&
@@ -4120,7 +6230,8 @@ export function createDescriptionAdapter(host,getState,getDocuments=()=>[],getCl
       prior.nativeNode.style.setProperty('display','none','important');
     }
     const body=prior.panel.querySelector?.('[data-titledeck-gameinfo-text]')||prior.panel.lastChild;
-    if(body&&body.textContent!==description)body.textContent=description;
+    paintDescription(body,description,markdown,url=>openDescriptionLink(url,doc.defaultView));
+    if(markdown)registerDescriptionLinks(prior.panel);
     status='Game Info: native-styled description active for app '+appid;
     return true;
   }
@@ -4132,7 +6243,7 @@ export function createDescriptionAdapter(host,getState,getDocuments=()=>[],getCl
     return [...result];
   }
   function clear(doc){
-    const old=owned.get(doc);if(old){old.remove?.();owned.delete(doc)}
+    const old=owned.get(doc);if(old){clearDescriptionLinkNavigation(old);old.remove?.();owned.delete(doc)}
     try{for(const el of doc.querySelectorAll('['+MARK+']'))if(el.getAttribute?.(MARK))el.remove?.()}catch{}
   }
   function routeId(doc){
@@ -4155,7 +6266,7 @@ export function createDescriptionAdapter(host,getState,getDocuments=()=>[],getCl
   function draw(doc,target,id,description,position='below_play') {
     const parent=target.parentElement;if(!parent)return false;
     let pane=owned.get(doc);
-    if(pane&&!pane.isConnected){owned.delete(doc);pane=null}
+    if(pane&&!pane.isConnected){clearDescriptionLinkNavigation(pane);owned.delete(doc);pane=null}
     if(pane?.getAttribute?.(MARK)!==id){clear(doc);pane=null}
     if(!pane){
       pane=doc.createElement('section');pane.setAttribute(MARK,id);
@@ -4163,7 +6274,7 @@ export function createDescriptionAdapter(host,getState,getDocuments=()=>[],getCl
       pane.style.cssText='box-sizing:border-box;width:calc(100% - 40px);margin:12px 20px;padding:16px 20px;border-radius:9px;background:#203045;border:1px solid #445b73;color:#ecf3f9;';
       const heading=doc.createElement('h3');heading.textContent='YOUR GAME DESCRIPTION';
       heading.style.cssText='margin:0 0 9px;font-size:15px;font-weight:750;color:#afd3f2;';
-      const body=doc.createElement('p');body.setAttribute('data-titledeck-description-text','true');
+      const body=doc.createElement('div');body.setAttribute('data-titledeck-description-text','true');
       body.style.cssText='margin:0;white-space:pre-wrap;overflow-wrap:anywhere;font-size:15px;line-height:1.5;';
       pane.appendChild(heading);pane.appendChild(body);
       owned.set(doc,pane);
@@ -4177,7 +6288,7 @@ export function createDescriptionAdapter(host,getState,getDocuments=()=>[],getCl
     if(preferHero&&!box){
       // Do not silently show Below Play when Artwork Footer is selected.
       // That made the old build appear unchanged to the user.
-      pane.remove?.();owned.delete(doc);
+      clear(doc);
       status=playBar?'Artwork Footer: Play bar out of view or no safe gap':'Artwork Footer: Steam Deck Play bar not found';
       return false;
     }
@@ -4209,11 +6320,17 @@ export function createDescriptionAdapter(host,getState,getDocuments=()=>[],getCl
     }
     const body=pane.querySelector?.('[data-titledeck-description-text]')||pane.lastChild;
     if(body){
-      if(body.textContent!==description)body.textContent=description; // Plain text only.
+      const markdown=isMarkdownDescription(getState(),id);
+      const rich=markdown&&layout!=='hero_footer';
+      const text=rich?description:descriptionPlainText(description,markdown);
+      paintDescription(body,text,rich,url=>openDescriptionLink(url,doc.defaultView));
+      if(rich)registerDescriptionLinks(pane);
+      else clearDescriptionLinkNavigation(pane);
       const textStyle=layout==='hero_footer'
         ?'margin:0;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;line-height:1.4;'
-        :'margin:0;white-space:pre-wrap;overflow-wrap:anywhere;font-size:15px;line-height:1.5;';
-      if(body._titledeckTextMode!==layout){body.style.cssText=textStyle;body._titledeckTextMode=layout}
+        :`margin:0;white-space:${rich?'normal':'pre-wrap'};overflow-wrap:anywhere;font-size:15px;line-height:1.5;`;
+      const textMode=layout+(rich?':markdown':'');
+      if(body._titledeckTextMode!==textMode){body.style.cssText=textStyle;body._titledeckTextMode=textMode}
     }
     return true;
   }
@@ -6914,6 +9031,8 @@ function Manager(){
   const [coverEpoch,setCoverEpoch]=R.useState(0);
   const [hiddenManagerIds,setHiddenManagerIds]=R.useState(()=>validHiddenManagerIds(readPreference(HIDDEN_LIBRARY_STORE,'[]')));
   const [descriptionDraft,setDescriptionDraft]=R.useState(contextGame?(state.descriptions?.[contextGame.appid]||''):'');
+  const [descriptionMarkdown,setDescriptionMarkdown]=R.useState(isMarkdownDescription(state,contextGame?.appid));
+  const descriptionFile=R.useRef(null);
   const [accent,setAccent]=R.useState(validAccent(readPreference(ACCENT_STORE,'wine')));
   const [hexDraft,setHexDraft]=R.useState('');
   const [customPickerOpen,setCustomPickerOpen]=R.useState(false);
@@ -7151,6 +9270,7 @@ function Manager(){
     activeInlineKeyboard?.close();setCleanupPreview(null);setCleanupUndo(null);
     setLastTile(g.appid);setSelected(g.appid);setDraft(aliases[g.appid]||g.name);
     setDescriptionDraft(state.descriptions?.[g.appid]||'');
+    setDescriptionMarkdown(isMarkdownDescription(state,g.appid));
     enterView('editor','edit-name');
     // When returning from a long library list, don't inherit the old
     // scroll position or jump to the bottom of a description preview.
@@ -7163,6 +9283,7 @@ function Manager(){
   const openDescription=()=>{
     activeInlineKeyboard?.close();
     setDescriptionDraft(state.descriptions?.[selected]||'');
+    setDescriptionMarkdown(isMarkdownDescription(state,selected));
     enterView('description','description-open');
     setTimeout(()=>scrollDescriptionWorkspace(root.current,false),110);
   };
@@ -7296,11 +9417,24 @@ function Manager(){
         :'Display replacements updated.',setNotice,true);
     }catch(e){notify('Could not save: '+String(e?.message||e),setNotice);}finally{setWorking(false);}
   };
+  const readDescriptionFile=async(event)=>{
+    const field=event.currentTarget,file=field.files?.[0];
+    if(!file)return;
+    field.value='';
+    try{
+      if(!/\.md$/i.test(file.name)||file.size>256000)throw Error('Choose an .md file up to 256 KB.');
+      const text=new TextDecoder('utf-8',{fatal:true}).decode(await file.arrayBuffer());
+      if(!field.isConnected)return;
+      setDescriptionDraft(text);
+      setDescriptionMarkdown(true);
+      notify('Markdown loaded. Preview and save it for this game.',setNotice,true);
+    }catch(error){notify('Could not read Markdown: '+String(error?.message||error),setNotice);}
+  };
   const saveDescription=async(remove=false)=>{
     if(working)return;
     const content=descriptionDraft.replace(/\r\n?/g,'\n').trim();
     if(!remove&&(!content||/[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/.test(content))){
-      notify('Description must contain plain text without control characters.',setNotice);return;
+      notify('Description must contain text without control characters.',setNotice);return;
     }
     setWorking(true);
     try{
@@ -7310,10 +9444,12 @@ function Manager(){
         // repeatedly rewrite Steam's React text during subsequent scans.
         descriptionAdapter?.restoreGameInfo?.(selected,state.descriptions?.[selected]||'');
         nonSteamDescriptionAdapter?.restoreGameInfo?.(selected);
-      }else await call('save_description',selected,content);
+      }else await call('save_description',selected,content,descriptionMarkdown?'markdown':'plain');
       const verified=await refreshState();
-      if(remove?Boolean(verified.descriptions?.[selected]):verified.descriptions?.[selected]!==content)throw Error('Description readback did not match.');
+      if((remove?Boolean(verified.descriptions?.[selected]):verified.descriptions?.[selected]!==content)||
+         isMarkdownDescription(verified,selected)!==(!remove&&descriptionMarkdown))throw Error('Description readback did not match.');
       setDescriptionDraft(remove?'':content);
+      if(remove)setDescriptionMarkdown(false);
       notify(remove?'Removed your local description override.':'Description saved. The game-page panel appears when Steam shows the matching game.',setNotice,true);
     }catch(e){notify('Could not save description: '+String(e?.message||e),setNotice);}
     finally{setWorking(false);}
@@ -7333,7 +9469,7 @@ function Manager(){
       descriptionAdapter?.restoreGameInfo?.(target,previous);
       nonSteamDescriptionAdapter?.restoreGameInfo?.(target);
       adapter?.runNow();
-      setDraft(original);setDescriptionDraft('');
+      setDraft(original);setDescriptionDraft('');setDescriptionMarkdown(false);
       notify('Restored original game state: Steam title and description. Unsaved edits cleared.',setNotice,true);
     }catch(e){notify('Could not restore original game state: '+String(e?.message||e),setNotice);}
     finally{setWorking(false)}
@@ -7465,7 +9601,7 @@ function Manager(){
           h('div',{className:'td-saved-description-heading'},
             'Saved description · '+savedDescriptionPreview(state.descriptions[selected]).length+' characters'),
           h('div',{className:'td-saved-description-excerpt'},
-            savedDescriptionPreview(state.descriptions[selected]).excerpt),
+            savedDescriptionPreview(descriptionPlainText(state.descriptions[selected],isMarkdownDescription(state,selected))).excerpt),
           h('div',{className:'td-saved-description-hint'},
             'Full text is preserved. Use Edit description or Restore Steam description above.')):null)));
     bottom=footer(contextEntryActive.current?'A: select  •  Tap B/Circle: All games  •  Hold B/Circle: Steam':'A: select an action  •  B: return to library',state.enabled?'Steam title replacement ON':'Display replacement paused');
@@ -7475,7 +9611,9 @@ function Manager(){
     const descNav=(key,e)=>{
       const d=dir(e),dest={
         'description-back':{10:'description-open',12:'description-save'},
-        'description-open':{9:'description-back',10:'description-input',12:'description-save'},
+        'description-open':{9:'description-back',10:'description-input',12:'description-format'},
+        'description-format':{9:'description-save',10:'description-input',11:'description-open',12:'description-file'},
+        'description-file':{9:'description-restore',10:'description-input',11:'description-format'},
         'description-input':{9:'description-open',10:'description-save'},
         'description-save':{9:'description-open',12:'description-restore',11:'description-back'},
         'description-restore':{11:'description-save',12:'description-bottom',9:'description-open'},
@@ -7497,18 +9635,27 @@ function Manager(){
     workspace=h('div',{className:'td-workspace','data-td-description-workspace':'true'},h('div',{className:'td-card td-game-editor-card',style:{maxWidth:900,margin:'0 auto',paddingBottom:28}},
       h('div',{className:'td-copy-label'},'DESCRIPTION FOR '+(aliases[selected]||original||selected)),
       h('p',{className:'td-editor-note'},nonSteamEdit?'Customize this non-Steam shortcut locally. In Game Info, your artwork appears beside the description and the right stick scrolls longer text. Original Steam metadata remains unchanged.':'Customize the description displayed locally on the matching Steam game page. Longer descriptions can be scrolled with the right stick. Original Steam metadata stays unchanged.'),
-      h(UI.Focusable,{'flow-children':'down'},h(Btn,{'data-td-focus':'description-open',nav:e=>descNav('description-open',e),onClick:openDescriptionTyping},'⌨ Edit description using Steam keyboard')),
+      h(UI.Focusable,{'flow-children':'right',className:'td-actions'},
+        h(Btn,{'data-td-focus':'description-open',nav:e=>descNav('description-open',e),onClick:openDescriptionTyping},'⌨ Edit description using Steam keyboard'),
+        h(Btn,{'data-td-focus':'description-format',nav:e=>descNav('description-format',e),disabled:working,
+          onClick:()=>setDescriptionMarkdown(!descriptionMarkdown)},descriptionMarkdown?'Format: Markdown':'Format: Plain text'),
+        h(Btn,{'data-td-focus':'description-file',nav:e=>descNav('description-file',e),disabled:working,
+          onClick:()=>descriptionFile.current?.click()},'Open .md file')),
+      h('input',{type:'file',accept:'.md,text/markdown',hidden:true,key:selected,ref:descriptionFile,onChange:readDescriptionFile}),
       h('div',{'data-td-focus':'description-input',className:'td-description-native-input',
         onGamepadDirection:e=>descNav('description-input',e)},
         h(InlineGameNameField,{value:descriptionDraft,setValue:setDescriptionDraft,
           label:'Custom game description',
           placeholder:'Write your custom description…',fieldKind:'description',nonSteamDescription:nonSteamEdit,finishFocus:'description-save',
           onEnter:()=>focusQuery(root.current,'[data-td-focus="description-save"]',70)})),
-      h('div',{className:'td-editor-note',style:{whiteSpace:'pre-wrap',overflowWrap:'anywhere',minHeight:85,
+      h('div',{className:'td-editor-note',style:{whiteSpace:descriptionMarkdown?'normal':'pre-wrap',overflowWrap:'anywhere',minHeight:85,
         maxHeight:160,overflowY:'auto',padding:'14px 16px',borderRadius:10,background:'#172234',border:'1px solid #43566e'}},
-        descriptionDraft||'Your custom description preview will appear here.'),
+        descriptionDraft?(descriptionMarkdown?markdownPreview(descriptionDraft,h,(href,children,key)=>h('a',{
+          key,href,target:'_blank',rel:'noopener noreferrer',style:{color:'inherit',textDecoration:'underline'},
+          onClick:event=>{if(openDescriptionLink(href))event.preventDefault();}
+        },...children)):descriptionDraft):'Your custom description preview will appear here.'),
       h('div',{className:'td-editor-original-meta'},nonSteamEdit?'Non-Steam Game Info: artwork on the left, text on the right · Full descriptions remain saved · Scroll with the right stick · Save and Restore are above':'Full descriptions remain saved · Scroll with the right stick · Save and Restore are above'),
-      stored?h('div',{className:'td-editor-note',style:{whiteSpace:'pre-wrap',overflowWrap:'anywhere',maxHeight:150,overflowY:'auto',marginTop:15}},'Saved local description: '+stored):null
+      stored?h('div',{className:'td-editor-note',style:{whiteSpace:'pre-wrap',overflowWrap:'anywhere',maxHeight:150,overflowY:'auto',marginTop:15}},'Saved local description: '+descriptionPlainText(stored,isMarkdownDescription(state,selected))):null
     ));
     bottom=footer(contextEntryActive.current?'A: edit or save  •  B: back  •  Hold B/Circle: Steam':'A: edit or save  •  B: return to game editor','Shown on matching Steam game detail pages');
   }else if(view==='keyboard'||view==='search'||view==='appid'){

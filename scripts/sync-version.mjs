@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { build } from 'esbuild';
 
 // The package manifest is the single version authority; all installed
 // runtime files must identify the same version.
@@ -31,7 +32,23 @@ const matcher = /(const PLUGIN = 'TitleDeck', PLUGIN_VERSION = ')[^']+(', ROUTE 
 if (!matcher.test(source)) throw new Error('Missing version declaration in source');
 const updated = source.replace(matcher, (_all,a,b)=>a+version+b);
 sync('src/index.js',updated);
-sync('dist/index.js',updated);
+const notices = ['marked', 'entities'].map(name =>
+  `${name} ${JSON.parse(read(`node_modules/${name}/package.json`)).version}\n${read(`node_modules/${name}/LICENSE`).trim()}`
+).join('\n\n');
+const { outputFiles } = await build({
+  absWorkingDir: root,
+  entryPoints: ['src/description-markdown.js'],
+  bundle: true,
+  write: false,
+  format: 'iife',
+  globalName: 'titleDeckMarkdown',
+  target: 'chrome120',
+  banner: { js: `/*\n${notices}\n*/` },
+});
+const importLine = /^import \{([^}]+)} from '\.\/description-markdown\.js';/;
+if (!importLine.test(updated)) throw new Error('Missing Markdown module import');
+const runtime = updated.replace(importLine, 'const {$1} = titleDeckMarkdown;');
+sync('dist/index.js', outputFiles[0].text + '\n' + runtime);
 if (!read('README.md').includes('1.4.0') && check && version==='1.4.0') {
   throw new Error('Public README must identify stable 1.4.0');
 }

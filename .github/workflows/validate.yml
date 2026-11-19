@@ -1,4 +1,4 @@
-name: TitleDeck 1.4.0 checks
+name: TitleDeck checks
 on:
   push:
     branches: [main]
@@ -10,7 +10,7 @@ on:
       - 'scripts/**'
       - 'assets/**'
       - 'plugin.json'
-      - 'package.json'
+      - 'package*.json'
       - 'README.md'
       - 'SOURCE.md'
       - 'CHANGELOG.md'
@@ -27,7 +27,7 @@ on:
       - 'tests/**'
       - 'scripts/**'
       - 'plugin.json'
-      - 'package.json'
+      - 'package*.json'
       - 'README.md'
       - 'SOURCE.md'
       - 'docs/**'
@@ -40,13 +40,16 @@ jobs:
     name: Tests / source parity / manifest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Verify synchronized version
+      - run: npm ci
+      - name: Verify synchronized version and reproducible bundle
         run: npm run version:check
       - name: JavaScript syntax and regression tests
         run: |
@@ -57,24 +60,24 @@ jobs:
         run: |
           python3 -m py_compile main.py
           python3 -m unittest discover -s tests -p 'test_*.py'
-      - name: Verify checked-in source against the published 1.4.0 runtime hashes
+      - name: Verify the historical 1.4.0 runtime hashes
         shell: bash
         run: |
           set -euo pipefail
           python3 - <<'PY'
           from pathlib import Path
-          import hashlib,re,json
-          src=Path('src/index.js').read_bytes()
-          assert src==Path('dist/index.js').read_bytes()
+          import hashlib,re,json,subprocess
           p=json.loads(Path('package.json').read_text())
           m=json.loads(Path('plugin.json').read_text())
-          assert p['version']==m['version']=='1.4.0'
+          assert p['version']==m['version']
           assert m['name']=='TitleDeck' and m['api_version']==1
           assert Path(m['publish']['image']).is_file()
           content=Path('docs/RELEASE_SOURCE_SHA256_1.4.0.md').read_text()
           pairs=re.findall(r'\| `([^`]+)` \| `([0-9a-f]{64})` \|',content)
           assert len(pairs)==11, f'Expected 11 release runtime hashes, got {len(pairs)}'
+          release_commit='756eb5e26ed2ab49383b7eb5c22e6781d5df62a6'
           for name,digest in pairs:
-              assert hashlib.sha256(Path(name).read_bytes()).hexdigest()==digest,name
+              released=subprocess.check_output(['git','show',f'{release_commit}:{name}'])
+              assert hashlib.sha256(released).hexdigest()==digest,name
           print('Verified 1.4.0 runtime: 11 matching SHA-256 entries')
           PY

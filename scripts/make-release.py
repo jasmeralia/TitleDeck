@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Build auditable TitleDeck installer/source ZIP files from a matching checkout."""
 import json
+import os
 import pathlib
 import subprocess
 import sys
@@ -24,9 +25,15 @@ for rel in files:
 with zipfile.ZipFile(installer,'w',zipfile.ZIP_DEFLATED,compresslevel=9) as z:
     for rel in files:z.write(ROOT/rel,'TitleDeck/'+rel)
 with zipfile.ZipFile(source,'w',zipfile.ZIP_DEFLATED,compresslevel=9) as z:
-    for file in ROOT.rglob('*'):
-        if not file.is_file() or '.git' in file.parts or '__pycache__' in file.parts or file.suffix=='.pyc':continue
-        z.write(file,'TitleDeck/'+str(file.relative_to(ROOT)))
+    for directory, folders, filenames in os.walk(ROOT):
+        folders[:] = sorted(name for name in folders if name not in {
+            '.git', 'node_modules', '__pycache__', '.pytest_cache', 'coverage',
+        })
+        for name in sorted(filenames):
+            file = pathlib.Path(directory) / name
+            if file.suffix == '.pyc':
+                continue
+            z.write(file, 'TitleDeck/' + str(file.relative_to(ROOT)))
 for output in (installer,source):
     with zipfile.ZipFile(output) as z:
         assert z.testzip() is None

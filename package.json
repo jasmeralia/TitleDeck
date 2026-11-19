@@ -1,8 +1,8 @@
 {
   "name": "titledeck",
-  "version": "1.4.0",
+  "version": "1.5.0-beta.1",
   "private": true,
-  "description": "TitleDeck 1.4.0 Stable: Steam library customization, Typography Studio and read-only Art Hero placement status; native placement controls when Art Hero is disabled.",
+  "description": "TitleDeck: local Steam library titles, descriptions, and display customization.",
   "type": "module",
   "license": "MIT",
   "author": "Valentine",
@@ -19,5 +19,12 @@
     "steam",
     "rename",
     "library"
-  ]
+  ],
+  "dependencies": {
+    "entities": "9.0.0",
+    "marked": "18.1.1"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2"
+  }
 }
