@@ -58,6 +58,13 @@ test('How to Fix the Future headings and spaced bold marker render as rich text'
   assert.equal(descriptionPlainText('## About the game\n\n**Your **destiny.', true), 'About the game\nYour destiny.');
 });
 
+test('adjacent bold labels stay formatted when a previous bold label ends', async () => {
+  const { parseDescriptionMarkdown } = await markdown();
+  const tree = parseDescriptionMarkdown('**Gameplay:** Management, Sandbox, Visual Novel **Protagonist:** Male Protagonist\n**Relationship:** Harem **Orientation:** Heterosexual');
+  const strong = tree[0].children.filter(item => item?.tag === 'strong').map(item => item.children.join(''));
+  assert.deepEqual(strong, ['Gameplay:', 'Protagonist:', 'Relationship:', 'Orientation:']);
+});
+
 test('controller registration uses the closest native owner and cleans up', async () => {
   const { updateDescriptionLinkNavigation, clearDescriptionLinkNavigation } = await markdown();
   const outer = { isConnected: true };

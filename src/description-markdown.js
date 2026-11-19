@@ -96,7 +96,7 @@ export function parseDescriptionMarkdown(text) {
   try {
     result = text.length > 100_000
       ? [text]
-      : describeTokens(parser.lexer(text.replace(/\*\*([^*\n]*\S)[ \t]+\*\*(?=\S)/g, '**$1** ')));
+      : describeTokens(parser.lexer(text.replace(/\*\*(?=\S)([^*\n]*\S)[ \t]+\*\*(?=\S)/g, '**$1** ')));
   } catch {
     result = [text];
   }

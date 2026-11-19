@@ -1944,7 +1944,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
     if (cache.has(text)) return cache.get(text);
     let result;
     try {
-      result = text.length > 1e5 ? [text] : describeTokens(parser.lexer(text.replace(/\*\*([^*\n]*\S)[ \t]+\*\*(?=\S)/g, "**$1** ")));
+      result = text.length > 1e5 ? [text] : describeTokens(parser.lexer(text.replace(/\*\*(?=\S)([^*\n]*\S)[ \t]+\*\*(?=\S)/g, "**$1** ")));
     } catch {
       result = [text];
     }
