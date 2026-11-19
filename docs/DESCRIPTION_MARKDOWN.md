@@ -8,6 +8,7 @@ Open a game in the TitleDeck Library Manager, choose **Edit description**, and s
 | Italics | `*Optional*` |
 | Underline | `++Underline++` |
 | Strikethrough | `~~Outdated~~` |
+| Heading | `## About the game` (levels 1–6) |
 | Numbered list | `1. First step`, then `2. Second step` on the next line |
 | Bulleted list | `- Item` on each line |
 | Link | `[Walkthrough](https://example.com/guide)` |
@@ -16,7 +17,7 @@ Open a game in the TitleDeck Library Manager, choose **Edit description**, and s
 
 Leave a blank line between paragraphs and before lists. Underline is a TitleDeck extension. Links accept absolute HTTPS URLs and open externally. Images and direct MP4/WebM clips are supported only from TitleDeck's approved HTTPS media hosts (currently `img.itch.zone`, `cdn.imgchest.com`, and selected Steam CDN hosts). Custom ports, credentials, local paths, other hosts, and unsupported file types are rejected and shown as readable labels. YouTube links remain ordinary external links.
 
-Media is fetched only after choosing **Show image** or **Play video**. Images have bounded dimensions and alt text. Video has controls, does not autoplay on page load, and can be hidden to pause and unload it. If loading or playback fails, use the displayed external link. Game Info and Below Play show media; Artwork Footer and saved-description summaries show compact text only. HTML is displayed as text. Inline media behavior and host policy are a proposed upstream contribution and may change after maintainer review and Steam Deck verification.
+Images display inline with bounded dimensions and alt text. Videos display inline with controls and never autoplay; playback starts only when the user activates the video controls. Media unloads when its description is replaced or its panel is removed. If loading or playback fails, use the displayed external link. Game Info and Below Play show media; Artwork Footer and saved-description summaries show compact text only. HTML is displayed as text. Inline media behavior and host policy are a proposed upstream contribution and may change after maintainer review and Steam Deck verification.
 
 ## JSON compatibility
 

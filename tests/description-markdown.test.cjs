@@ -48,6 +48,16 @@ test('How to Fix the Future media markers render only approved images and direct
   assert.equal(descriptionPlainText(source, true), 'Screenshot\nTrailer\nVideo\nYouTube\nPort');
 });
 
+test('How to Fix the Future headings and spaced bold marker render as rich text', async () => {
+  const { parseDescriptionMarkdown, descriptionPlainText } = await markdown();
+  const tree = parseDescriptionMarkdown('## About the game\n\n**Your **destiny.');
+  assert.equal(tree[0].tag, 'h2');
+  assert.equal(tree[0].children[0], 'About the game');
+  assert.equal(tree[1].children[0].tag, 'strong');
+  assert.deepEqual(tree[1].children[0].children, ['Your']);
+  assert.equal(descriptionPlainText('## About the game\n\n**Your **destiny.', true), 'About the game\nYour destiny.');
+});
+
 test('controller registration uses the closest native owner and cleans up', async () => {
   const { updateDescriptionLinkNavigation, clearDescriptionLinkNavigation } = await markdown();
   const outer = { isConnected: true };

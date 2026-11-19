@@ -52,7 +52,7 @@ export function descriptionMedia(raw, kind) {
 }
 
 // Only renderer-owned tags and attributes reach the DOM. HTML and unsupported
-// markup become text; validated media elements are created only after action.
+// markup become text; validated media is inserted as native media elements.
 function describeTokens(tokens, depth = 0) {
   return tokens.flatMap(token => {
     if (depth >= 48) return [token.raw ?? ''];
@@ -62,6 +62,7 @@ function describeTokens(tokens, depth = 0) {
       case 'space':
       case 'def': return [];
       case 'paragraph': return [node('p', children())];
+      case 'heading': return [node(`h${token.depth}`, children())];
       case 'br': return [node('br')];
       case 'text': return token.tokens ? children() : [decodeHTML(token.text)];
       case 'escape': return [token.text];
@@ -93,7 +94,9 @@ export function parseDescriptionMarkdown(text) {
   if (cache.has(text)) return cache.get(text);
   let result;
   try {
-    result = text.length > 100_000 ? [text] : describeTokens(parser.lexer(text));
+    result = text.length > 100_000
+      ? [text]
+      : describeTokens(parser.lexer(text.replace(/\*\*([^*\n]*\S)[ \t]+\*\*(?=\S)/g, '**$1** ')));
   } catch {
     result = [text];
   }
@@ -112,7 +115,7 @@ export function descriptionPlainText(text, markdown) {
     if (item.tag === 'br') return '\n';
     const contents = item.children.map(flatten).join('');
     if (item.tag === 'li') return `• ${contents}\n`;
-    return contents + (['p', 'ol', 'ul'].includes(item.tag) ? '\n' : '');
+    return contents + (['p', 'ol', 'ul', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'].includes(item.tag) ? '\n' : '');
   };
   return parseDescriptionMarkdown(text).map(flatten).join('').trim();
 }
@@ -120,6 +123,12 @@ export function descriptionPlainText(text, markdown) {
 function nodeStyle(tag) {
   switch (tag) {
     case 'p': return { margin: '0 0 .65em' };
+    case 'h1': return { margin: '.7em 0 .4em', fontSize: '1.55em', fontWeight: 750, lineHeight: 1.2 };
+    case 'h2': return { margin: '.7em 0 .4em', fontSize: '1.4em', fontWeight: 750, lineHeight: 1.25 };
+    case 'h3': return { margin: '.65em 0 .35em', fontSize: '1.25em', fontWeight: 700, lineHeight: 1.3 };
+    case 'h4': return { margin: '.6em 0 .3em', fontSize: '1.12em', fontWeight: 700 };
+    case 'h5': return { margin: '.55em 0 .3em', fontSize: '1.05em', fontWeight: 700 };
+    case 'h6': return { margin: '.5em 0 .25em', fontSize: '1em', fontWeight: 700 };
     case 'ul': return { margin: '0 0 .65em', paddingInlineStart: '1.5em', listStyleType: 'disc' };
     case 'ol': return { margin: '0 0 .65em', paddingInlineStart: '1.5em', listStyleType: 'decimal' };
     case 'li': return { display: 'list-item' };
@@ -133,7 +142,12 @@ export function markdownPreview(text, h, link) {
     if (typeof item === 'string') return item;
     const children = item.children.map(render);
     if (item.tag === 'a') return link(item.attributes.href, children, key);
-    if (item.tag === 'media') return h('span', { key, className: 'td-description-media-preview' }, `[${item.attributes.kind}: ${item.attributes.label}]`);
+    if (item.tag === 'media') {
+      const { kind, src, label } = item.attributes;
+      const props = { key, 'data-titledeck-description-media': '', style: { display: 'block', maxWidth: '100%', maxHeight: '60vh', margin: '.7em 0' } };
+      if (kind === 'image') return h('img', { ...props, src, alt: label, loading: 'lazy', decoding: 'async' });
+      return h('video', { ...props, src, controls: true, preload: 'metadata', playsInline: true, 'aria-label': label });
+    }
     return h(item.tag, { ...item.attributes, key, style: nodeStyle(item.tag) }, ...children);
   };
   return parseDescriptionMarkdown(text).map(render);
@@ -165,57 +179,41 @@ export function paintDescription(body, text, markdown, openLink, scope = '') {
         const box = doc.createElement('div');
         box.setAttribute('data-titledeck-description-media', kind);
         box.style.cssText = 'margin:.7em 0;max-width:100%;';
-        const button = doc.createElement('button');
-        button.type = 'button';
-        button.textContent = kind === 'video' ? `Play video: ${label}` : `Show image: ${label}`;
-        button.setAttribute('data-titledeck-description-focus', '');
-        button.setAttribute('aria-label', button.textContent);
-        button.addEventListener('vgp_onbuttondown', event => {
+        if (kind === 'image') {
+          const img = doc.createElement('img');
+          img.alt = label;
+          img.loading = 'lazy';
+          img.decoding = 'async';
+          img.style.cssText = 'display:block;max-width:100%;max-height:60vh;object-fit:contain;';
+          img.setAttribute('data-titledeck-description-media', '');
+          img.addEventListener('error', () => {
+            img.remove();
+            failureLink(box, src, label, doc, openLink);
+          }, { once: true });
+          img.src = src;
+          box.appendChild(img);
+          return box;
+        }
+        const video = doc.createElement('video');
+        video.controls = true;
+        video.preload = 'metadata';
+        video.playsInline = true;
+        video.tabIndex = 0;
+        video.setAttribute('aria-label', label);
+        video.setAttribute('data-titledeck-description-focus', '');
+        video.setAttribute('data-titledeck-description-focus-label', 'Play or pause video');
+        video.style.cssText = 'display:block;width:100%;max-width:720px;max-height:60vh;';
+        video.setAttribute('data-titledeck-description-media', '');
+        video.addEventListener('error', () => failureLink(box, src, label, doc, openLink), { once: true });
+        video.addEventListener('vgp_onbuttondown', event => {
           if (event.detail?.button !== 1 || event.detail?.is_repeat) return;
           event.preventDefault();
           event.stopPropagation();
-          button.click();
+          if (video.paused) video.play().catch(() => failureLink(box, src, label, doc, openLink));
+          else video.pause();
         });
-        button.addEventListener('click', async () => {
-          if (box.querySelector('img,video')) {
-            cleanupDescriptionMedia(box);
-            box.replaceChildren(button);
-            button.textContent = kind === 'video' ? `Play video: ${label}` : `Show image: ${label}`;
-            button.setAttribute('aria-label', button.textContent);
-            return;
-          }
-          if (kind === 'image') {
-            const img = doc.createElement('img');
-            img.alt = label;
-            img.loading = 'lazy';
-            img.decoding = 'async';
-            img.style.cssText = 'display:block;max-width:100%;max-height:60vh;object-fit:contain;margin-top:.5em;';
-            img.setAttribute('data-titledeck-description-media', '');
-            img.addEventListener('error', () => {
-              img.remove();
-              failureLink(box, src, label, doc, openLink);
-            }, { once: true });
-            img.src = src;
-            box.append(button, img);
-            button.textContent = `Hide image: ${label}`;
-            button.setAttribute('aria-label', button.textContent);
-            return;
-          }
-          const video = doc.createElement('video');
-          video.controls = true;
-          video.preload = 'none';
-          video.playsInline = true;
-          video.setAttribute('aria-label', label);
-          video.style.cssText = 'display:block;width:100%;max-width:720px;max-height:60vh;margin-top:.5em;';
-          video.setAttribute('data-titledeck-description-media', '');
-          video.addEventListener('error', () => failureLink(box, src, label, doc, openLink), { once: true });
-          video.src = src;
-          box.append(button, video);
-          button.textContent = `Hide video: ${label}`;
-          button.setAttribute('aria-label', button.textContent);
-          try { await video.play(); } catch { failureLink(box, src, label, doc, openLink); }
-        });
-        box.appendChild(button);
+        video.src = src;
+        box.appendChild(video);
         return box;
       }
       const element = doc.createElement(item.tag);
@@ -252,6 +250,7 @@ function failureLink(box, src, label, doc, openLink) {
   fallback.textContent = `Media unavailable · Open ${label}`;
   fallback.setAttribute('data-titledeck-description-media-fallback', '');
   fallback.setAttribute('data-titledeck-description-focus', '');
+  fallback.setAttribute('data-titledeck-description-focus-label', 'Open media externally');
   fallback.addEventListener('click', () => openLink(src));
   fallback.addEventListener('vgp_onbuttondown', event => {
     if (event.detail?.button !== 1 || event.detail?.is_repeat) return;
@@ -307,7 +306,9 @@ export function updateDescriptionLinkNavigation(panel, trees) {
       const child = parent.Tree.CreateNode(parent, undefined);
       entry.nodes.push(child);
       child.SetProperties({ focusable: true, noFocusRing: true,
-        onOKActionDescription: link.hasAttribute?.('data-titledeck-description-link') ? 'Open link' : 'Show or play media' });
+        onOKActionDescription: link.hasAttribute?.('data-titledeck-description-link')
+          ? 'Open link'
+          : (link.getAttribute?.('data-titledeck-description-focus-label') || 'Open media externally') });
       child.OnMount(link);
     }
   } catch {

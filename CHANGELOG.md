@@ -2,9 +2,9 @@
 
 ## 1.5.0-beta.1 — Markdown descriptions
 
-Custom game descriptions can opt into Markdown for emphasis, underlining, strikethrough, lists and links. The editor previews the result and can load a Markdown file when the operating system provides a file picker. JSON settings and backups preserve each description's format. See the [Markdown descriptions guide](docs/DESCRIPTION_MARKDOWN.md).
+Custom game descriptions can opt into Markdown for headings, emphasis, underlining, strikethrough, lists and links. The editor previews the result and can load a Markdown file when the operating system provides a file picker. JSON settings and backups preserve each description's format. See the [Markdown descriptions guide](docs/DESCRIPTION_MARKDOWN.md).
 
-Markdown descriptions now support explicitly revealed images and direct MP4/WebM playback from a small HTTPS host allowlist. Artwork Footer and text summaries remain compact. Media unloads when hidden or replaced, and failed media offers an external fallback. The media host policy is documented as a proposal pending upstream review and Steam Deck codec verification.
+Markdown descriptions now show inline images and direct MP4/WebM video controls from a small HTTPS host allowlist. Videos do not autoplay; playback starts from the controls. Artwork Footer and text summaries remain compact. Media unloads when replaced or its panel is removed, and failed media offers an external fallback. The media host policy is documented as a proposal pending upstream review and Steam Deck codec verification.
 
 ## 1.4.0 — Published stable release (November 7, 2026)
 
