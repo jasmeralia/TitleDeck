@@ -30,11 +30,29 @@ test('raw HTML, unsupported media and invalid links never produce active element
   assert.match(descriptionPlainText(source, true), /<iframe.*Illustration one two three four/);
 });
 
+test('How to Fix the Future media markers render only approved images and direct clips', async () => {
+  const { parseDescriptionMarkdown, descriptionPlainText } = await markdown();
+  const source = [
+    '![Screenshot](https://shared.akamai.steamstatic.com/extras/scene.avif)',
+    '![video: Trailer](https://shared.akamai.steamstatic.com/extras/clip.webm)',
+    '![Video](https://evil.example/clip.mp4)',
+    '![YouTube](https://www.youtube.com/embed/DYfUZOydMZY)',
+    '![Port](https://img.itch.zone:444/scene.png)',
+  ].join('\n\n');
+  const tree = parseDescriptionMarkdown(source);
+  const media = tree.flatMap(block => block.children ?? []).filter(item => item.tag === 'media');
+  assert.deepEqual(media.map(item => [item.attributes.kind, item.attributes.label, item.attributes.src]), [
+    ['image', 'Screenshot', 'https://shared.akamai.steamstatic.com/extras/scene.avif'],
+    ['video', 'Trailer', 'https://shared.akamai.steamstatic.com/extras/clip.webm'],
+  ]);
+  assert.equal(descriptionPlainText(source, true), 'Screenshot\nTrailer\nVideo\nYouTube\nPort');
+});
+
 test('controller registration uses the closest native owner and cleans up', async () => {
   const { updateDescriptionLinkNavigation, clearDescriptionLinkNavigation } = await markdown();
   const outer = { isConnected: true };
   const inner = { isConnected: true, parentElement: outer };
-  const link = {};
+  const link = { hasAttribute: name => name === 'data-titledeck-description-link' };
   const panel = { isConnected: true, parentElement: inner, querySelectorAll: () => [link] };
   const calls = [];
   const tree = {

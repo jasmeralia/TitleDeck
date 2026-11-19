@@ -1,4 +1,4 @@
-import { clearDescriptionLinkNavigation, descriptionPlainText, markdownPreview, paintDescription,
+import { cleanupDescriptionMedia, clearDescriptionLinkNavigation, descriptionPlainText, markdownPreview, paintDescription,
   updateDescriptionLinkNavigation } from './description-markdown.js';
 
 /** TitleDeck: source frontend for the Decky Quick Menu, Full Library Manager and Steam Home integration. */
@@ -3089,11 +3089,11 @@ export function createNonSteamGameInfoAdapter(host,getState,getDocuments=()=>[],
       panel.style.fontSize=record.nativeFont;
       panel.style.lineHeight=record.nativeLine;
       const body=doc.createElement('div');
-      paintDescription(body,text,true,url=>openDescriptionLink(url,doc.defaultView));
+      paintDescription(body,text,true,url=>openDescriptionLink(url,doc.defaultView),record.appid);
       panel.appendChild(body);
       parent.insertBefore(panel,message);
       record.richPanel=panel;
-    }else paintDescription(record.richPanel.firstChild,text,true,url=>openDescriptionLink(url,doc.defaultView));
+    }else paintDescription(record.richPanel.firstChild,text,true,url=>openDescriptionLink(url,doc.defaultView),record.appid);
     if(message.style.getPropertyValue('display')!=='none'||message.style.getPropertyPriority('display')!=='important')
       message.style.setProperty('display','none','important');
     if(updatePlainText)registerDescriptionLinks(record.richPanel);
@@ -3197,7 +3197,7 @@ export function createNonSteamGameInfoAdapter(host,getState,getDocuments=()=>[],
     for(const [name,style] of Object.entries(originalMessageStyle))
       restoreInlineStyle(message,name,style);
     restoreGrid(record);
-    if(record.richPanel){clearDescriptionLinkNavigation(record.richPanel);record.richPanel.remove();}
+    if(record.richPanel){clearDescriptionLinkNavigation(record.richPanel);cleanupDescriptionMedia(record.richPanel);record.richPanel.remove();}
     current.delete(doc);
   }
   // Stable, in-flow layout: Never make the React-owned description absolute.
@@ -3719,7 +3719,7 @@ export function createNonSteamGameInfoAdapter(host,getState,getDocuments=()=>[],
         if(!markdown&&message.textContent===text)replaceText(message,newRecord.originalText);
         for(const [name,style] of Object.entries(originalMessageStyle))restoreInlineStyle(message,name,style);
         restoreGrid(newRecord);
-        if(newRecord.richPanel){clearDescriptionLinkNavigation(newRecord.richPanel);newRecord.richPanel.remove();}
+        if(newRecord.richPanel){clearDescriptionLinkNavigation(newRecord.richPanel);cleanupDescriptionMedia(newRecord.richPanel);newRecord.richPanel.remove();}
         status='Native replacement unavailable; original fallback left visible';
       }
     }
@@ -4088,6 +4088,7 @@ export function createDescriptionAdapter(host,getState,getDocuments=()=>[],getCl
     }
     try{native?.removeAttribute?.('data-titledeck-native-original')}catch{}
     clearDescriptionLinkNavigation(prior.panel);
+    cleanupDescriptionMedia(prior.panel);
     try{prior.panel?.remove?.()}catch{}
     nativeInfo.delete(doc);
   }
@@ -4155,7 +4156,7 @@ export function createDescriptionAdapter(host,getState,getDocuments=()=>[],getCl
         typeof nativeDescription.className==='string')panel.className=nativeDescription.className;
       // Populate BEFORE the panel is connected or Steam's original text hidden.
       const body=panel.querySelector?.('[data-titledeck-gameinfo-text]')||panel.lastChild;
-      paintDescription(body,description,markdown,url=>openDescriptionLink(url,doc.defaultView));
+      paintDescription(body,description,markdown,url=>openDescriptionLink(url,doc.defaultView),appid);
       const style=nativeDescription?.style;
       const originalDisplay=style?.display??'';
       const originalDisplayProperty=typeof style?.getPropertyValue==='function'?style.getPropertyValue('display'):null;
@@ -4174,7 +4175,7 @@ export function createDescriptionAdapter(host,getState,getDocuments=()=>[],getCl
       prior.nativeNode.style.setProperty('display','none','important');
     }
     const body=prior.panel.querySelector?.('[data-titledeck-gameinfo-text]')||prior.panel.lastChild;
-    paintDescription(body,description,markdown,url=>openDescriptionLink(url,doc.defaultView));
+    paintDescription(body,description,markdown,url=>openDescriptionLink(url,doc.defaultView),appid);
     if(markdown)registerDescriptionLinks(prior.panel);
     status='Game Info: native-styled description active for app '+appid;
     return true;
@@ -4187,7 +4188,7 @@ export function createDescriptionAdapter(host,getState,getDocuments=()=>[],getCl
     return [...result];
   }
   function clear(doc){
-    const old=owned.get(doc);if(old){clearDescriptionLinkNavigation(old);old.remove?.();owned.delete(doc)}
+    const old=owned.get(doc);if(old){clearDescriptionLinkNavigation(old);cleanupDescriptionMedia(old);old.remove?.();owned.delete(doc)}
     try{for(const el of doc.querySelectorAll('['+MARK+']'))if(el.getAttribute?.(MARK))el.remove?.()}catch{}
   }
   function routeId(doc){
@@ -4210,7 +4211,7 @@ export function createDescriptionAdapter(host,getState,getDocuments=()=>[],getCl
   function draw(doc,target,id,description,position='below_play') {
     const parent=target.parentElement;if(!parent)return false;
     let pane=owned.get(doc);
-    if(pane&&!pane.isConnected){clearDescriptionLinkNavigation(pane);owned.delete(doc);pane=null}
+    if(pane&&!pane.isConnected){clearDescriptionLinkNavigation(pane);cleanupDescriptionMedia(pane);owned.delete(doc);pane=null}
     if(pane?.getAttribute?.(MARK)!==id){clear(doc);pane=null}
     if(!pane){
       pane=doc.createElement('section');pane.setAttribute(MARK,id);
@@ -4267,7 +4268,7 @@ export function createDescriptionAdapter(host,getState,getDocuments=()=>[],getCl
       const markdown=isMarkdownDescription(getState(),id);
       const rich=markdown&&layout!=='hero_footer';
       const text=rich?description:descriptionPlainText(description,markdown);
-      paintDescription(body,text,rich,url=>openDescriptionLink(url,doc.defaultView));
+      paintDescription(body,text,rich,url=>openDescriptionLink(url,doc.defaultView),id);
       if(rich)registerDescriptionLinks(pane);
       else clearDescriptionLinkNavigation(pane);
       const textStyle=layout==='hero_footer'
