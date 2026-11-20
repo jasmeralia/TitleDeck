@@ -5,13 +5,16 @@ No Steam file is ever written by this module. No root access or external network
 from __future__ import annotations
 
 import asyncio
+import fcntl
 import json
 import logging
 import os
 import re
 import tempfile
 import time
+from contextlib import asynccontextmanager, contextmanager
 from pathlib import Path
+from collections.abc import AsyncIterator, Iterator
 from typing import Any
 
 try:
@@ -52,24 +55,57 @@ def validate_title(value: Any) -> str:
     return value
 
 
-def validate_description(value: Any, *, allow_legacy: bool = False) -> str:
-    """Validate plain text without an arbitrary character cap.
-
-    Steam UI may be less stable with long synopses; the frontend gives a
-    yellow warning starting at 1,247 characters but users can still save.
-    """
+def validate_description(value: Any) -> str:
     if not isinstance(value, str):
         raise ValueError("Description must be text")
     value = value.replace("\r\n", "\n").replace("\r", "\n").strip()
     if not value or any(
         (ord(ch) < 32 and ch not in "\n\t") or ord(ch) == 127 for ch in value
     ):
-        raise ValueError("Description must contain non-empty plain text without control characters")
+        raise ValueError("Description must contain non-empty text without control characters")
     return value
 
 
+def read_descriptions(raw: dict[str, Any]) -> tuple[dict[str, str], dict[str, str]]:
+    bodies = raw.get("descriptions", {})
+    formats = raw.get("description_formats", {})
+    if not isinstance(bodies, dict) or len(bodies) > MAX_ALIAS_ENTRIES:
+        raise ValueError("Invalid description collection")
+    if not isinstance(formats, dict) or len(formats) > MAX_ALIAS_ENTRIES:
+        raise ValueError("Invalid description formats")
+    descriptions = {normalize_id(appid): validate_description(body) for appid, body in bodies.items()}
+    normalized_formats = {}
+    for appid, kind in formats.items():
+        appid = normalize_id(appid)
+        if appid not in descriptions or kind != "markdown":
+            raise ValueError("Description format must be markdown for an included App ID")
+        normalized_formats[appid] = kind
+    return descriptions, normalized_formats
+
+
+def set_description_format(state: dict[str, Any], appid: str, kind: str) -> None:
+    if kind == "markdown":
+        state["description_formats"][appid] = kind
+    else:
+        state["description_formats"].pop(appid, None)
+
+
 def blank_state() -> dict[str, Any]:
-    return {"schema": SCHEMA, "enabled": True, "home_menu_titles": True, "aliases": {}, "descriptions": {}, "description_position": "below_play"}
+    return {"schema": SCHEMA, "enabled": True, "home_menu_titles": True, "aliases": {},
+            "descriptions": {}, "description_formats": {}, "description_position": "below_play"}
+
+
+@contextmanager
+def settings_write_lock() -> Iterator[None]:
+    """Share the settings transaction lock with local import tools on Linux."""
+    directory = settings_path().parent
+    directory.mkdir(parents=True, exist_ok=True)
+    descriptor = os.open(directory, os.O_RDONLY | os.O_DIRECTORY)
+    try:
+        fcntl.flock(descriptor, fcntl.LOCK_EX)
+        yield
+    finally:
+        os.close(descriptor)
 
 
 def load_state(path: Path | None = None) -> dict[str, Any]:
@@ -85,18 +121,14 @@ def load_state(path: Path | None = None) -> dict[str, Any]:
         raise ValueError("Invalid alias collection")
     for appid, title in record.items():
         aliases[normalize_id(appid)] = validate_title(title)
-    descriptions: dict[str, str] = {}
-    saved_descriptions = raw.get("descriptions", {})
-    if not isinstance(saved_descriptions, dict) or len(saved_descriptions) > MAX_ALIAS_ENTRIES:
-        raise ValueError("Invalid description collection")
-    for appid, description in saved_descriptions.items():
-        descriptions[normalize_id(appid)] = validate_description(description, allow_legacy=True)
+    descriptions, formats = read_descriptions(raw)
     position = raw.get("description_position", "below_play")
     if position not in ("below_play", "hero_footer", "game_info") or not isinstance(position, str):
         raise ValueError("Invalid description placement")
     return {"schema": SCHEMA, "enabled": raw.get("enabled") is not False,
             "home_menu_titles": raw.get("home_menu_titles", raw.get("home_menu_preview", True)) is True,
-            "aliases": aliases, "descriptions": descriptions, "description_position": position}
+            "aliases": aliases, "descriptions": descriptions, "description_formats": formats,
+            "description_position": position}
 
 
 def store_state(state: dict[str, Any], path: Path | None = None) -> None:
@@ -644,6 +676,12 @@ class Plugin:
     def __init__(self) -> None:
         self._lock = asyncio.Lock()
 
+    @asynccontextmanager
+    async def _settings_transaction(self) -> AsyncIterator[None]:
+        async with self._lock:
+            with settings_write_lock():
+                yield
+
     async def _main(self) -> None:
         if decky is not None:
             decky.logger.info("TitleDeck backend started (read-only Steam access)")
@@ -952,7 +990,7 @@ class Plugin:
     async def save_alias(self, appid: str, title: str) -> dict[str, Any]:
         appid = normalize_id(appid)
         title = validate_title(title)
-        async with self._lock:
+        async with self._settings_transaction():
             state = load_state()
             if appid not in state["aliases"] and len(state["aliases"]) >= MAX_ALIAS_ENTRIES:
                 raise ValueError("Maximum number of aliases reached")
@@ -960,23 +998,27 @@ class Plugin:
             store_state(state)
             return state
 
-    async def save_description(self, appid: str, description: str) -> dict[str, Any]:
+    async def save_description(self, appid: str, description: str, format: str = "plain") -> dict[str, Any]:
         appid = normalize_id(appid)
         description = validate_description(description)
-        async with self._lock:
+        if format not in ("plain", "markdown"):
+            raise ValueError("Unsupported description format")
+        async with self._settings_transaction():
             state = load_state()
             if (appid not in state["descriptions"]
                     and len(state["descriptions"]) >= MAX_ALIAS_ENTRIES):
                 raise ValueError("Maximum number of descriptions reached")
             state["descriptions"][appid] = description
+            set_description_format(state, appid, format)
             store_state(state)
             return state
 
     async def delete_description(self, appid: str) -> dict[str, Any]:
         appid = normalize_id(appid)
-        async with self._lock:
+        async with self._settings_transaction():
             state = load_state()
             state["descriptions"].pop(appid, None)
+            set_description_format(state, appid, "plain")
             store_state(state)
             return state
 
@@ -987,10 +1029,11 @@ class Plugin:
         another game's customizations, or the user's manual backup.
         """
         appid = normalize_id(appid)
-        async with self._lock:
+        async with self._settings_transaction():
             state = load_state()
             had_title = state["aliases"].pop(appid, None) is not None
             had_description = state["descriptions"].pop(appid, None) is not None
+            set_description_format(state, appid, "plain")
             if had_title or had_description:
                 store_state(state)
             return {**state, "restored_title": had_title,
@@ -998,7 +1041,7 @@ class Plugin:
 
     async def delete_alias(self, appid: str) -> dict[str, Any]:
         appid = normalize_id(appid)
-        async with self._lock:
+        async with self._settings_transaction():
             state = load_state()
             state["aliases"].pop(appid, None)
             store_state(state)
@@ -1009,7 +1052,7 @@ class Plugin:
         if not isinstance(expected_aliases, dict) or len(expected_aliases) > MAX_ALIAS_ENTRIES:
             raise ValueError("Invalid confirmation data")
         expected = {normalize_id(k): validate_title(v) for k, v in expected_aliases.items()}
-        async with self._lock:
+        async with self._settings_transaction():
             state = load_state()
             if state["aliases"] != expected:
                 raise ValueError("Saved titles changed since confirmation. Reopen Restore All and try again")
@@ -1025,7 +1068,7 @@ class Plugin:
 
     async def undo_restore_all(self) -> dict[str, Any]:
         """Reapply the saved batch without touching any Steam or installation files."""
-        async with self._lock:
+        async with self._settings_transaction():
             safety_path = settings_path().with_name("titledeck.before_restore_all.json")
             if not safety_path.is_file():
                 raise ValueError("No Restore All backup exists")
@@ -1043,7 +1086,7 @@ class Plugin:
         """Choose a reversible TitleDeck-only placement, without writing Steam or CSS Loader files."""
         if not isinstance(position, str) or position not in ("below_play", "hero_footer", "game_info"):
             raise ValueError("Unsupported description position")
-        async with self._lock:
+        async with self._settings_transaction():
             state = load_state()
             state["description_position"] = position
             store_state(state)
@@ -1052,7 +1095,7 @@ class Plugin:
     async def set_enabled(self, enabled: bool) -> dict[str, Any]:
         if not isinstance(enabled, bool):
             raise ValueError("Enabled must be true or false")
-        async with self._lock:
+        async with self._settings_transaction():
             state = load_state()
             state["enabled"] = enabled
             store_state(state)
@@ -1062,7 +1105,7 @@ class Plugin:
         """Toggle the reversible STEAM-button menu alias display without editing Steam metadata."""
         if not isinstance(enabled, bool):
             raise ValueError("HOME-menu title setting must be true or false")
-        async with self._lock:
+        async with self._settings_transaction():
             state = load_state()
             state["home_menu_titles"] = enabled
             store_state(state)
@@ -1102,14 +1145,14 @@ class Plugin:
 
     async def create_backup(self) -> str:
         """Keep a full settings backup outside Steam's files."""
-        async with self._lock:
+        async with self._settings_transaction():
             target = settings_path().with_name('titledeck.backup.json')
             store_state(load_state(), target)
             return str(target)
 
     async def restore_backup(self) -> dict[str, Any]:
         """Restore the local backup explicitly, with atomic replacement."""
-        async with self._lock:
+        async with self._settings_transaction():
             target = settings_path().with_name('titledeck.backup.json')
             if not target.is_file():
                 raise ValueError('No saved TitleDeck backup was found')
@@ -1130,22 +1173,16 @@ class Plugin:
         if not isinstance(incoming, dict) or len(incoming) > MAX_ALIAS_ENTRIES:
             raise ValueError("Invalid alias list")
         additions = {normalize_id(k): validate_title(v) for k, v in incoming.items()}
-        incoming_descriptions = obj.get("descriptions", {})
-        if not isinstance(incoming_descriptions, dict) or len(incoming_descriptions) > MAX_ALIAS_ENTRIES:
-            raise ValueError("Invalid imported descriptions")
-        added_descriptions = {
-            # Accept existing backups from earlier preview builds without
-            # truncating the user's locally saved text. New saves still cap
-            # descriptions without a per-description length cap.
-            normalize_id(k): validate_description(v, allow_legacy=True) for k, v in incoming_descriptions.items()
-        }
+        added_descriptions, added_formats = read_descriptions(obj)
         position = obj.get("description_position")
         if position is not None and (not isinstance(position, str) or position not in ("below_play", "hero_footer", "game_info")):
             raise ValueError("Unsupported imported description placement")
-        async with self._lock:
+        async with self._settings_transaction():
             state = load_state()
             state["aliases"].update(additions)
             state["descriptions"].update(added_descriptions)
+            for appid in added_descriptions:
+                set_description_format(state, appid, added_formats.get(appid, "plain"))
             if position is not None:
                 state["description_position"] = position
             if (len(state["aliases"]) > MAX_ALIAS_ENTRIES

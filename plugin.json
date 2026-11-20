@@ -12,6 +12,6 @@
     "description": "Customize Steam Deck game names, descriptions, art and typography; view Art Hero placement without altering its settings.",
     "image": "assets/titledeck-icon.png"
   },
-  "version": "1.4.0",
+  "version": "1.5.0-beta.1",
   "description": "Customize Steam Deck game titles, including the STEAM-button menu, and locally displayed game descriptions with safe restoration."
 }

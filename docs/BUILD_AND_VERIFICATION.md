@@ -1,26 +1,28 @@
-# Building and checking TitleDeck 1.4.0
+# Building and checking TitleDeck
 
 [← Home](../README.md) · [Source](../SOURCE.md) · [Source hashes](RELEASE_SOURCE_SHA256_1.4.0.md) · [Hardware checklist](RELEASE_TESTING_1.4.0.md)
 
 ## Tools and commands
-The runtime is a direct JavaScript module paired with a Python Decky backend. The installer does not need a generated framework bundle. Install Node 22+ and Python 3.12+ for development.
+The runtime is a self-contained JavaScript module paired with a Python Decky backend. Install Node 22+ and Python 3.12+ for development.
 
 ```bash
-npm run version:check
+npm ci
+npm run build
 node --check src/index.js
 python3 -m py_compile main.py
 npm test
 python3 -m unittest discover -s tests -p 'test_*.py'
 ```
 
-`npm run build` synchronizes the manifests with `package.json` and verifies the module. `npm run release:zip` builds fresh versioned **Rebuilt** and **Repository-Source** ZIPs after tests, but neither may be substituted for the exact original hardware-accepted installer without repeating Steam Deck acceptance.
+`npm run build` synchronizes the manifests with `package.json`, bundles the Markdown renderer and its locked dependencies with esbuild, and checks the generated module. `npm run version:check` verifies that the checked-in runtime matches the build. `npm run release:zip` builds fresh versioned **Rebuilt** and **Repository-Source** ZIPs after tests, but neither may be substituted for the exact original hardware-accepted installer without repeating Steam Deck acceptance.
 
 ## Current source layout
 - `main.py`: Decky backend, stored preferences, theme read-only coordination.
-- `src/index.js`: frontend source; matches `dist/index.js` byte-for-byte.
-- `dist/index.js`: direct frontend installed by Decky.
+- `src/index.js`: frontend source.
+- `src/description-markdown.js`: the Markdown renderer and link navigation.
+- `dist/index.js`: the generated frontend installed by Decky, including the dependencies and their license notices.
 - `assets/`: icon, Quick Access icon and Typography Studio art.
-- `tests/`: runnable 1.4.0 checks plus archived historical tests.
+- `tests/`: current checks plus archived historical tests.
 - `docs/screenshots/v1.4.0/`: all 22 nonduplicated image captures.
 - `docs/RELEASE_SOURCE_SHA256_1.4.0.md`: hashes produced from the original official ZIP.
 

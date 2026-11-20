@@ -1,5 +1,8 @@
+import { clearDescriptionLinkNavigation, descriptionPlainText, markdownPreview, paintDescription,
+  updateDescriptionLinkNavigation } from './description-markdown.js';
+
 /** TitleDeck: source frontend for the Decky Quick Menu, Full Library Manager and Steam Home integration. */
-const PLUGIN = 'TitleDeck', PLUGIN_VERSION = '1.4.0', ROUTE = '/titledeck/manager';
+const PLUGIN = 'TitleDeck', PLUGIN_VERSION = '1.5.0-beta.1', ROUTE = '/titledeck/manager';
 // Private developer opt-in. Normal users never see scan controls or timing logs;
 // the bounded timing recorder remains available for future Steam UI regressions.
 export function developerDiagnosticsEnabled(){
@@ -8,6 +11,21 @@ export function developerDiagnosticsEnabled(){
 const R = globalThis.SP_REACT;
 const UI = globalThis.DFL;
 const h = (...a) => R.createElement(...a);
+const isMarkdownDescription = (state, id) => state?.description_formats?.[id] === 'markdown';
+function registerDescriptionLinks(panel) {
+  try { updateDescriptionLinkNavigation(panel, UI?.getGamepadNavigationTrees?.() || []); } catch {}
+}
+function openDescriptionLink(url, host = globalThis) {
+  if (typeof UI?.Navigation?.NavigateToExternalWeb === 'function') {
+    UI.Navigation.NavigateToExternalWeb(url);
+    return true;
+  }
+  if (typeof host?.SteamClient?.System?.OpenExternalBrowser === 'function') {
+    host.SteamClient.System.OpenExternalBrowser(url);
+    return true;
+  }
+  return false;
+}
 const QAM_VERSION_STYLE = {display:'inline-flex',alignItems:'center',fontSize:10,fontWeight:800,color:'#e9eef6',background:'#384257',border:'1px solid #7d8aa5',borderRadius:99,padding:'3px 7px',lineHeight:1};
 // Stable user ID keeps the avatar link intact if the GitHub handle changes.
 const DEVELOPER_GITHUB_URL='https://github.com/ValentineBSAA';
@@ -34,7 +52,7 @@ let pendingContextGame=null;
 let steamDocument = null;
 let steamBridgeStatus = "Waiting for Steam window";
 const STEAM_ANCHOR = "TitleDeckSteamTextBridge";
-let latestState = { schema:1, enabled:true, home_menu_titles:true, aliases:{}, descriptions:{}, description_position:'below_play', games:[], recovery:{available:false,count:0}, manual_backup:{available:false,count:0} };
+let latestState = { schema:1, enabled:true, home_menu_titles:true, aliases:{}, descriptions:{}, description_formats:{}, description_position:'below_play', games:[], recovery:{available:false,count:0}, manual_backup:{available:false,count:0} };
 const observers = new Set();
 function connect() {
   if (bridge) return bridge;
@@ -48,14 +66,15 @@ function acceptState(state){
   if(state && typeof state ==='object'){
     // 1.2.5 reuses all valid 1.2.4 art except changed-ID hints migrated by the backend.
     if(state.cover_cache_version===125&&state.cover_cache&&typeof state.cover_cache==='object')hydrateCoverResolutionCache(state.cover_cache);
-    latestState={...latestState,...state};
+    latestState={...latestState,...state,description_formats:state.description_formats??{}};
   }
   observers.forEach(listener=>{try{listener(latestState);}catch{}});
   const aliasesChanged=before.enabled!==latestState.enabled||
     JSON.stringify(before.aliases||{})!==JSON.stringify(latestState.aliases||{});
   const descriptionsChanged=before.enabled!==latestState.enabled||
     before.description_position!==latestState.description_position||
-    JSON.stringify(before.descriptions||{})!==JSON.stringify(latestState.descriptions||{});
+    JSON.stringify(before.descriptions||{})!==JSON.stringify(latestState.descriptions||{})||
+    JSON.stringify(before.description_formats||{})!==JSON.stringify(latestState.description_formats||{});
   if(aliasesChanged)adapter?.runNow();
   if(aliasesChanged||before.home_menu_titles!==latestState.home_menu_titles)homeMenuAdapter?.runNow();
   if(descriptionsChanged){descriptionAdapter?.runNow();nonSteamDescriptionAdapter?.runNow();}
@@ -246,7 +265,7 @@ export function createTitleAdapter(host,getState,getStore=()=>globalThis.appStor
     if(!el || !el.isConnected)return true;
     // Allow Steam's own game-options dialogs, whose headings can show a title.
     // Keep editable controls, other Decky panels, and unrelated notifications untouched.
-    try{if(el.closest?.('[data-titledeck-ui], [data-titledeck-description], [data-titledeck-exclude], [class*="decky" i], [class*="PluginStore" i], [id*="decky" i], [contenteditable], [role="textbox"], [role="combobox"], input, textarea, script, style, select, option'))return true;}catch{}
+    try{if(el.closest?.('[data-titledeck-ui], [data-titledeck-description], [data-titledeck-gameinfo-description], [data-titledeck-nonsteam-description], [data-titledeck-exclude], [class*="decky" i], [class*="PluginStore" i], [id*="decky" i], [contenteditable], [role="textbox"], [role="combobox"], input, textarea, script, style, select, option'))return true;}catch{}
     const name=String(el.className||'');
     return /(?:decky|notification|toast|tooltip|chat|friendslist)/i.test(name);
   }
@@ -1098,11 +1117,11 @@ export function formatDescriptionGameProbe(probe=getLastDescriptionGameProbe()){
  *  text), retaining its CSS module classes and font/layout inheritance. The
  *  separate TitleDeck blue card is reserved for Below Play/Artwork Footer.
  *  All user text goes through textContent, never HTML or markdown injection. */
-export function createNativeSteamDescriptionPanel(doc,nativeDescription,appid){
+export function createNativeSteamDescriptionPanel(doc,nativeDescription,appid,markdown=false){
   let panel=null;
-  if(nativeDescription?.cloneNode)try{panel=nativeDescription.cloneNode(false)}catch{}
+  if(!markdown&&nativeDescription?.cloneNode)try{panel=nativeDescription.cloneNode(false)}catch{}
   if(!panel){
-    const tag=String(nativeDescription?.tagName||'div').toLowerCase();
+    const tag=markdown?'div':String(nativeDescription?.tagName||'div').toLowerCase();
     panel=doc.createElement(/^(?:div|section|p|article|span)$/.test(tag)?tag:'div');
     if(nativeDescription?.className&&typeof nativeDescription.className==='string')
       panel.className=nativeDescription.className;
@@ -1116,9 +1135,9 @@ export function createNativeSteamDescriptionPanel(doc,nativeDescription,appid){
     // Game Info typography with no plugin-colored background or heading.
     panel.style.cssText='font:inherit;color:inherit;background:transparent;border:0;margin:0;padding:0;';
   }
-  const body=doc.createElement('span');
+  const body=doc.createElement(markdown?'div':'span');
   body.setAttribute('data-titledeck-gameinfo-text','true');
-  body.style.cssText='white-space:pre-wrap;overflow-wrap:anywhere;';
+  body.style.cssText=markdown?'white-space:normal;overflow-wrap:anywhere;':'white-space:pre-wrap;overflow-wrap:anywhere;';
   panel.appendChild(body);
   return panel;
 }
@@ -2984,7 +3003,8 @@ export function createNonSteamGameInfoAdapter(host,getState,getDocuments=()=>[],
        poster, often separated by unrelated React wrappers. Build the ONLY
        presentation row on the already verified native description element.
        This avoids grid placement on Steam-owned common ancestors. */
-    [data-titledeck-nonsteam-live][data-titledeck-nonsteam-side-by-side] {
+    [data-titledeck-nonsteam-side-by-side][data-titledeck-nonsteam-live],
+    [data-titledeck-nonsteam-side-by-side][data-titledeck-nonsteam-description] {
       display:grid !important;
       grid-template-columns:minmax(105px,180px) minmax(0,1fr) !important;
       grid-template-rows:auto !important;
@@ -2996,7 +3016,8 @@ export function createNonSteamGameInfoAdapter(host,getState,getDocuments=()=>[],
       height:auto !important;
       box-sizing:border-box !important;
     }
-    [data-titledeck-nonsteam-live][data-titledeck-nonsteam-side-by-side]::before {
+    [data-titledeck-nonsteam-live][data-titledeck-nonsteam-side-by-side]::before,
+    [data-titledeck-nonsteam-description][data-titledeck-nonsteam-side-by-side] > div {
       grid-column:2 !important;
       grid-row:1 !important;
       min-width:0 !important;
@@ -3012,7 +3033,8 @@ export function createNonSteamGameInfoAdapter(host,getState,getDocuments=()=>[],
       margin:0 !important; padding:0 !important; border:0 !important;
       aspect-ratio:auto !important; visibility:hidden !important;
     }
-    [data-titledeck-nonsteam-live][data-titledeck-nonsteam-side-by-side]::after {
+    [data-titledeck-nonsteam-live][data-titledeck-nonsteam-side-by-side]::after,
+    [data-titledeck-nonsteam-description][data-titledeck-nonsteam-side-by-side]::after {
       content:'';
       display:block;
       grid-column:1 !important;
@@ -3054,7 +3076,32 @@ export function createNonSteamGameInfoAdapter(host,getState,getDocuments=()=>[],
       return message.getAttribute(PAINT_ATTRIBUTE)===text;
     }catch{return false}
   }
+  function showDescription(record,text,updatePlainText=true){
+    if(!record.markdown)
+      return showGuard(record,text)&&(!updatePlainText||replaceText(record.message,text));
+    const {message}=record,doc=message.ownerDocument,parent=message.parentElement;
+    if(!parent?.insertBefore||!ensurePaintGuard(doc))return false;
+    if(!record.richPanel){
+      const panel=doc.createElement('div');
+      panel.setAttribute('data-titledeck-nonsteam-description',record.appid);
+      panel.style.cssText='overflow-wrap:anywhere;min-width:0;';
+      panel.style.color=record.nativeColor;
+      panel.style.fontSize=record.nativeFont;
+      panel.style.lineHeight=record.nativeLine;
+      const body=doc.createElement('div');
+      paintDescription(body,text,true,url=>openDescriptionLink(url,doc.defaultView));
+      panel.appendChild(body);
+      parent.insertBefore(panel,message);
+      record.richPanel=panel;
+    }else paintDescription(record.richPanel.firstChild,text,true,url=>openDescriptionLink(url,doc.defaultView));
+    if(message.style.getPropertyValue('display')!=='none'||message.style.getPropertyPriority('display')!=='important')
+      message.style.setProperty('display','none','important');
+    if(updatePlainText)registerDescriptionLinks(record.richPanel);
+    else clearDescriptionLinkNavigation(record.richPanel);
+    return true;
+  }
   function clearGuard(record){
+    if(record?.markdown)return;
     const message=record?.message;
     try{message?.removeAttribute?.(PAINT_ATTRIBUTE);message?.removeAttribute?.(LAYOUT_ATTRIBUTE)}catch{}
     for(const name of ['--td-nonsteam-color','--td-nonsteam-font','--td-nonsteam-line','--td-nonsteam-poster'])
@@ -3143,13 +3190,14 @@ export function createNonSteamGameInfoAdapter(host,getState,getDocuments=()=>[],
     clearGuard(record); // Reveal native text BEFORE restoring its contents/position.
     // If React reused the node for another shortcut and has already replaced
     // our words with new content, don't overwrite that game's text.
-    if(message?.isConnected&&message.textContent===record.text)
+    if(!record.markdown&&message?.isConnected&&message.textContent===record.text)
       replaceText(message,originalText);
-    else if(!message?.isConnected&&message?.textContent===record.text)
+    else if(!record.markdown&&!message?.isConnected&&message?.textContent===record.text)
       replaceText(message,originalText);
     for(const [name,style] of Object.entries(originalMessageStyle))
       restoreInlineStyle(message,name,style);
     restoreGrid(record);
+    if(record.richPanel){clearDescriptionLinkNavigation(record.richPanel);record.richPanel.remove();}
     current.delete(doc);
   }
   // Stable, in-flow layout: Never make the React-owned description absolute.
@@ -3286,7 +3334,7 @@ export function createNonSteamGameInfoAdapter(host,getState,getDocuments=()=>[],
     for(const {el,old} of record?.gridStyles||[])
       for(const [name,saved] of Object.entries(old))restoreInlineStyle(el,name,saved);
     try{record?.gridGhostNodes?.forEach?.(node=>node.removeAttribute?.(GHOST_ATTRIBUTE))}catch{}
-    if(record){record.gridGhostNodes=[];record.message?.removeAttribute?.(LAYOUT_ATTRIBUTE);record.gridStyles=[];record.gridAnchor=null;record.gridArtChild=null;record.gridTextChild=null;record.nativePosterGrid=null}
+    if(record){record.gridGhostNodes=[];(record.richPanel||record.message)?.removeAttribute?.(LAYOUT_ATTRIBUTE);record.gridStyles=[];record.gridAnchor=null;record.gridArtChild=null;record.gridTextChild=null;record.nativePosterGrid=null}
   }
   function gridRemember(record,el,name,value){
     let entry=record.gridStyles.find(e=>e.el===el);
@@ -3501,7 +3549,7 @@ export function createNonSteamGameInfoAdapter(host,getState,getDocuments=()=>[],
     return {format:'titledeck-layout-v1',records};
   }
   function positionNative(record){
-    const {root,message}=record;
+    const {root}=record,message=record.richPanel||record.message;
     if(!root?.isConnected||!message?.isConnected)return false;
     let art=record.artwork;
     if(!art?.isConnected)art=locateNonSteamArtwork(root,message)?.img||null;
@@ -3589,9 +3637,11 @@ export function createNonSteamGameInfoAdapter(host,getState,getDocuments=()=>[],
     for(const doc of docs()){
       const id=routeId(doc),record=current.get(doc);
       const text=String(saved[id]||'').trim();
+      const markdown=isMarkdownDescription(state,id);
       if(!state.enabled||state.description_position!=='game_info'||!id||!text||
          !isNativeSteamShortcutApp(id,getStore(doc))){restoreRecord(doc);continue}
-      if(record&&(record.appid!==id||!record.message?.isConnected||
+      if(record&&(record.appid!==id||record.markdown!==markdown||!record.message?.isConnected||
+         (record.markdown&&(!record.richPanel?.isConnected||record.richPanel.parentElement!==record.message.parentElement))||
          !record.root?.isConnected||appidFromVisibleGame(record.root)!==id))
         restoreRecord(doc);
       // Community hides Game Info without necessarily unmounting it. Do NOT
@@ -3599,14 +3649,14 @@ export function createNonSteamGameInfoAdapter(host,getState,getDocuments=()=>[],
       // paragraph would expose the generic Valve text before React settles.
       const hidden=current.get(doc);
       if(hidden&&!visible(hidden.root)){
-        if(showGuard(hidden,text)){hidden.text=text;shown++;continue}
+        if(showDescription(hidden,text,false)){hidden.text=text;shown++;continue}
         restoreRecord(doc);continue;
       }
       const active=current.get(doc);
       if(active){
         // The saved text is independent of artwork: NEVER undo the visible
         // paragraph just because a cover is temporarily unmounted or loading.
-        if(!showGuard(active,text)||!replaceText(active.message,text)){
+        if(!showDescription(active,text)){
           restoreRecord(doc);status='Native description paragraph no longer writable';
           continue;
         }
@@ -3642,13 +3692,13 @@ export function createNonSteamGameInfoAdapter(host,getState,getDocuments=()=>[],
       const {root,message}=chosen;
       const art=locateNonSteamArtwork(root,message);
       const originalMessageStyle={};
-      for(const name of touchedStyles)originalMessageStyle[name]=originalInlineStyle(message,name);
+      for(const name of markdown?['display']:touchedStyles)originalMessageStyle[name]=originalInlineStyle(message,name);
       const originalRootStyle=originalInlineStyle(root,'position');
       const nativeCSS=doc.defaultView?.getComputedStyle?.(message);
       const originalPaintVars={};
       for(const key of ['--td-nonsteam-color','--td-nonsteam-font','--td-nonsteam-line'])
         originalPaintVars[key]=originalInlineStyle(message,key);
-      const newRecord={appid:id,root,message,artwork:art?.img||null,originalText:message.textContent,
+      const newRecord={appid:id,root,message,markdown,artwork:art?.img||null,originalText:message.textContent,
         originalMessageStyle,originalRootStyle,originalPaintVars,
         nativeColor:nativeCSS?.color||'#293241',
         nativeFont:nativeCSS?.fontSize||'14px',
@@ -3657,7 +3707,7 @@ export function createNonSteamGameInfoAdapter(host,getState,getDocuments=()=>[],
       try{
         // The paragraph itself is the hard requirement, NOT the cover. Apply
         // custom text synchronously before attempting any artwork layout.
-        if(!showGuard(newRecord,text)||!replaceText(message,text))
+        if(!showDescription(newRecord,text))
           throw Error('Native description not ready');
         current.set(doc,newRecord);shown++;
         // Use stable in-flow grid only when cover and text have a confirmed
@@ -3666,9 +3716,10 @@ export function createNonSteamGameInfoAdapter(host,getState,getDocuments=()=>[],
       }catch{
         // Failed initial placement must NEVER leave a blank Game Info page.
         clearGuard(newRecord);
-        if(message.textContent===text)replaceText(message,newRecord.originalText);
+        if(!markdown&&message.textContent===text)replaceText(message,newRecord.originalText);
         for(const [name,style] of Object.entries(originalMessageStyle))restoreInlineStyle(message,name,style);
         restoreGrid(newRecord);
+        if(newRecord.richPanel){clearDescriptionLinkNavigation(newRecord.richPanel);newRecord.richPanel.remove();}
         status='Native replacement unavailable; original fallback left visible';
       }
     }
@@ -3714,7 +3765,7 @@ export function createNonSteamGameInfoAdapter(host,getState,getDocuments=()=>[],
             if(record?.message &&
               (change.target===record.message.firstChild||
                change.target?.parentElement===record.message))
-              return record.message.textContent!==String(saved[id]).trim();
+              return !record.markdown&&record.message.textContent!==String(saved[id]).trim();
             return isNonSteamFallbackMessage(change.target?.nodeValue||
               change.target?.textContent||'');
           });
@@ -3770,10 +3821,11 @@ export function createNonSteamGameInfoAdapter(host,getState,getDocuments=()=>[],
     if(!state.enabled||state.description_position!=='game_info')return false;
     for(const doc of docs()){
       const rec=current.get(doc),id=routeId(doc);
+      const panel=rec?.richPanel||rec?.message;
       if(!rec||rec.appid!==id||!state.descriptions?.[id]||
-         !rec.message?.isConnected||!visible(rec.message)||
+         !panel?.isConnected||!visible(panel)||
          !isNativeSteamShortcutApp(id,getStore(doc)))continue;
-      const target=findScrollableGameInfo(rec.message);
+      const target=findScrollableGameInfo(panel);
       if(!target)continue;
       const before=Number(target.scrollTop)||0;
       try{target.scrollTop=before+amount*25;}catch{return false}
@@ -4022,7 +4074,7 @@ export function createDescriptionAdapter(host,getState,getDocuments=()=>[],getCl
   function clearGameInfo(doc,keepWarm=false){
     const prior=nativeInfo.get(doc);
     if(!prior){if(!keepWarm)warmPanels.delete(doc);return;}
-    if(keepWarm&&prior.panel)warmPanels.set(doc,{appid:prior.appid,panel:prior.panel});
+    if(keepWarm&&prior.panel)warmPanels.set(doc,{appid:prior.appid,markdown:prior.markdown,panel:prior.panel});
     else warmPanels.delete(doc);
     // A failure restoring one style must not prevent removing the clone.
     const native=prior.nativeNode,style=native?.style;
@@ -4035,6 +4087,7 @@ export function createDescriptionAdapter(host,getState,getDocuments=()=>[],getCl
       try{if(style.display==='none')style.display=''}catch{}
     }
     try{native?.removeAttribute?.('data-titledeck-native-original')}catch{}
+    clearDescriptionLinkNavigation(prior.panel);
     try{prior.panel?.remove?.()}catch{}
     nativeInfo.delete(doc);
   }
@@ -4068,12 +4121,13 @@ export function createDescriptionAdapter(host,getState,getDocuments=()=>[],getCl
     // On a stable game page the existing Steam native node is the source of
     // truth. Never re-identify the original from a DOM containing our styled
     // clone, even if Steam's live class finder changes the match order.
+    const markdown=isMarkdownDescription(getState(),appid);
     let prior=nativeInfo.get(doc);
-    if(prior&&(prior.appid!==appid||!prior.parent?.isConnected||
-      !prior.nativeNode?.isConnected||!prior.panel?.isConnected)){
+    if(prior&&(prior.appid!==appid||prior.markdown!==markdown||!prior.parent?.isConnected||
+      (prior.nativeNode&&!prior.nativeNode.isConnected)||!prior.panel?.isConnected)){
       // Keep the existing filled clone across *this same game's* tab remount;
       // drop it on a route change or explicit Restore Original.
-      const sameApp=prior.appid===appid;
+      const sameApp=prior.appid===appid&&prior.markdown===markdown;
       clearGameInfo(doc,sameApp);prior=null;
     }
     const found=prior?{container:prior.parent,nativeDescription:prior.nativeNode}
@@ -4094,14 +4148,14 @@ export function createDescriptionAdapter(host,getState,getDocuments=()=>[],getCl
     if(!parent?.insertBefore)return false;
     if(!prior){
       const warmed=warmPanels.get(doc);
-      const panel=warmed?.appid===appid&&warmed.panel? warmed.panel:
-        createNativeSteamDescriptionPanel(doc,nativeDescription,appid);
+      const panel=warmed?.appid===appid&&warmed.markdown===markdown&&warmed.panel? warmed.panel:
+        createNativeSteamDescriptionPanel(doc,nativeDescription,appid,markdown);
       warmPanels.delete(doc);
       if(warmed?.appid===appid&&nativeDescription?.className&&
         typeof nativeDescription.className==='string')panel.className=nativeDescription.className;
       // Populate BEFORE the panel is connected or Steam's original text hidden.
       const body=panel.querySelector?.('[data-titledeck-gameinfo-text]')||panel.lastChild;
-      if(body&&body.textContent!==description)body.textContent=description;
+      paintDescription(body,description,markdown,url=>openDescriptionLink(url,doc.defaultView));
       const style=nativeDescription?.style;
       const originalDisplay=style?.display??'';
       const originalDisplayProperty=typeof style?.getPropertyValue==='function'?style.getPropertyValue('display'):null;
@@ -4112,7 +4166,7 @@ export function createDescriptionAdapter(host,getState,getDocuments=()=>[],getCl
         if(typeof style.setProperty==='function')style.setProperty('display','none','important');
         else style.display='none';
       }
-      prior={appid,parent,nativeNode:nativeDescription,originalDisplay,originalDisplayProperty,originalDisplayPriority,panel};
+      prior={appid,markdown,parent,nativeNode:nativeDescription,originalDisplay,originalDisplayProperty,originalDisplayPriority,panel};
       nativeInfo.set(doc,prior);
     }
     if(prior.nativeNode?.style&&typeof prior.nativeNode.style.getPropertyValue==='function'&&
@@ -4120,7 +4174,8 @@ export function createDescriptionAdapter(host,getState,getDocuments=()=>[],getCl
       prior.nativeNode.style.setProperty('display','none','important');
     }
     const body=prior.panel.querySelector?.('[data-titledeck-gameinfo-text]')||prior.panel.lastChild;
-    if(body&&body.textContent!==description)body.textContent=description;
+    paintDescription(body,description,markdown,url=>openDescriptionLink(url,doc.defaultView));
+    if(markdown)registerDescriptionLinks(prior.panel);
     status='Game Info: native-styled description active for app '+appid;
     return true;
   }
@@ -4132,7 +4187,7 @@ export function createDescriptionAdapter(host,getState,getDocuments=()=>[],getCl
     return [...result];
   }
   function clear(doc){
-    const old=owned.get(doc);if(old){old.remove?.();owned.delete(doc)}
+    const old=owned.get(doc);if(old){clearDescriptionLinkNavigation(old);old.remove?.();owned.delete(doc)}
     try{for(const el of doc.querySelectorAll('['+MARK+']'))if(el.getAttribute?.(MARK))el.remove?.()}catch{}
   }
   function routeId(doc){
@@ -4155,7 +4210,7 @@ export function createDescriptionAdapter(host,getState,getDocuments=()=>[],getCl
   function draw(doc,target,id,description,position='below_play') {
     const parent=target.parentElement;if(!parent)return false;
     let pane=owned.get(doc);
-    if(pane&&!pane.isConnected){owned.delete(doc);pane=null}
+    if(pane&&!pane.isConnected){clearDescriptionLinkNavigation(pane);owned.delete(doc);pane=null}
     if(pane?.getAttribute?.(MARK)!==id){clear(doc);pane=null}
     if(!pane){
       pane=doc.createElement('section');pane.setAttribute(MARK,id);
@@ -4163,7 +4218,7 @@ export function createDescriptionAdapter(host,getState,getDocuments=()=>[],getCl
       pane.style.cssText='box-sizing:border-box;width:calc(100% - 40px);margin:12px 20px;padding:16px 20px;border-radius:9px;background:#203045;border:1px solid #445b73;color:#ecf3f9;';
       const heading=doc.createElement('h3');heading.textContent='YOUR GAME DESCRIPTION';
       heading.style.cssText='margin:0 0 9px;font-size:15px;font-weight:750;color:#afd3f2;';
-      const body=doc.createElement('p');body.setAttribute('data-titledeck-description-text','true');
+      const body=doc.createElement('div');body.setAttribute('data-titledeck-description-text','true');
       body.style.cssText='margin:0;white-space:pre-wrap;overflow-wrap:anywhere;font-size:15px;line-height:1.5;';
       pane.appendChild(heading);pane.appendChild(body);
       owned.set(doc,pane);
@@ -4177,7 +4232,7 @@ export function createDescriptionAdapter(host,getState,getDocuments=()=>[],getCl
     if(preferHero&&!box){
       // Do not silently show Below Play when Artwork Footer is selected.
       // That made the old build appear unchanged to the user.
-      pane.remove?.();owned.delete(doc);
+      clear(doc);
       status=playBar?'Artwork Footer: Play bar out of view or no safe gap':'Artwork Footer: Steam Deck Play bar not found';
       return false;
     }
@@ -4209,11 +4264,17 @@ export function createDescriptionAdapter(host,getState,getDocuments=()=>[],getCl
     }
     const body=pane.querySelector?.('[data-titledeck-description-text]')||pane.lastChild;
     if(body){
-      if(body.textContent!==description)body.textContent=description; // Plain text only.
+      const markdown=isMarkdownDescription(getState(),id);
+      const rich=markdown&&layout!=='hero_footer';
+      const text=rich?description:descriptionPlainText(description,markdown);
+      paintDescription(body,text,rich,url=>openDescriptionLink(url,doc.defaultView));
+      if(rich)registerDescriptionLinks(pane);
+      else clearDescriptionLinkNavigation(pane);
       const textStyle=layout==='hero_footer'
         ?'margin:0;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;line-height:1.4;'
-        :'margin:0;white-space:pre-wrap;overflow-wrap:anywhere;font-size:15px;line-height:1.5;';
-      if(body._titledeckTextMode!==layout){body.style.cssText=textStyle;body._titledeckTextMode=layout}
+        :`margin:0;white-space:${rich?'normal':'pre-wrap'};overflow-wrap:anywhere;font-size:15px;line-height:1.5;`;
+      const textMode=layout+(rich?':markdown':'');
+      if(body._titledeckTextMode!==textMode){body.style.cssText=textStyle;body._titledeckTextMode=textMode}
     }
     return true;
   }
@@ -6914,6 +6975,8 @@ function Manager(){
   const [coverEpoch,setCoverEpoch]=R.useState(0);
   const [hiddenManagerIds,setHiddenManagerIds]=R.useState(()=>validHiddenManagerIds(readPreference(HIDDEN_LIBRARY_STORE,'[]')));
   const [descriptionDraft,setDescriptionDraft]=R.useState(contextGame?(state.descriptions?.[contextGame.appid]||''):'');
+  const [descriptionMarkdown,setDescriptionMarkdown]=R.useState(isMarkdownDescription(state,contextGame?.appid));
+  const descriptionFile=R.useRef(null);
   const [accent,setAccent]=R.useState(validAccent(readPreference(ACCENT_STORE,'wine')));
   const [hexDraft,setHexDraft]=R.useState('');
   const [customPickerOpen,setCustomPickerOpen]=R.useState(false);
@@ -7151,6 +7214,7 @@ function Manager(){
     activeInlineKeyboard?.close();setCleanupPreview(null);setCleanupUndo(null);
     setLastTile(g.appid);setSelected(g.appid);setDraft(aliases[g.appid]||g.name);
     setDescriptionDraft(state.descriptions?.[g.appid]||'');
+    setDescriptionMarkdown(isMarkdownDescription(state,g.appid));
     enterView('editor','edit-name');
     // When returning from a long library list, don't inherit the old
     // scroll position or jump to the bottom of a description preview.
@@ -7163,6 +7227,7 @@ function Manager(){
   const openDescription=()=>{
     activeInlineKeyboard?.close();
     setDescriptionDraft(state.descriptions?.[selected]||'');
+    setDescriptionMarkdown(isMarkdownDescription(state,selected));
     enterView('description','description-open');
     setTimeout(()=>scrollDescriptionWorkspace(root.current,false),110);
   };
@@ -7296,11 +7361,24 @@ function Manager(){
         :'Display replacements updated.',setNotice,true);
     }catch(e){notify('Could not save: '+String(e?.message||e),setNotice);}finally{setWorking(false);}
   };
+  const readDescriptionFile=async(event)=>{
+    const field=event.currentTarget,file=field.files?.[0];
+    if(!file)return;
+    field.value='';
+    try{
+      if(!/\.md$/i.test(file.name)||file.size>256000)throw Error('Choose an .md file up to 256 KB.');
+      const text=new TextDecoder('utf-8',{fatal:true}).decode(await file.arrayBuffer());
+      if(!field.isConnected)return;
+      setDescriptionDraft(text);
+      setDescriptionMarkdown(true);
+      notify('Markdown loaded. Preview and save it for this game.',setNotice,true);
+    }catch(error){notify('Could not read Markdown: '+String(error?.message||error),setNotice);}
+  };
   const saveDescription=async(remove=false)=>{
     if(working)return;
     const content=descriptionDraft.replace(/\r\n?/g,'\n').trim();
     if(!remove&&(!content||/[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/.test(content))){
-      notify('Description must contain plain text without control characters.',setNotice);return;
+      notify('Description must contain text without control characters.',setNotice);return;
     }
     setWorking(true);
     try{
@@ -7310,10 +7388,12 @@ function Manager(){
         // repeatedly rewrite Steam's React text during subsequent scans.
         descriptionAdapter?.restoreGameInfo?.(selected,state.descriptions?.[selected]||'');
         nonSteamDescriptionAdapter?.restoreGameInfo?.(selected);
-      }else await call('save_description',selected,content);
+      }else await call('save_description',selected,content,descriptionMarkdown?'markdown':'plain');
       const verified=await refreshState();
-      if(remove?Boolean(verified.descriptions?.[selected]):verified.descriptions?.[selected]!==content)throw Error('Description readback did not match.');
+      if((remove?Boolean(verified.descriptions?.[selected]):verified.descriptions?.[selected]!==content)||
+         isMarkdownDescription(verified,selected)!==(!remove&&descriptionMarkdown))throw Error('Description readback did not match.');
       setDescriptionDraft(remove?'':content);
+      if(remove)setDescriptionMarkdown(false);
       notify(remove?'Removed your local description override.':'Description saved. The game-page panel appears when Steam shows the matching game.',setNotice,true);
     }catch(e){notify('Could not save description: '+String(e?.message||e),setNotice);}
     finally{setWorking(false);}
@@ -7333,7 +7413,7 @@ function Manager(){
       descriptionAdapter?.restoreGameInfo?.(target,previous);
       nonSteamDescriptionAdapter?.restoreGameInfo?.(target);
       adapter?.runNow();
-      setDraft(original);setDescriptionDraft('');
+      setDraft(original);setDescriptionDraft('');setDescriptionMarkdown(false);
       notify('Restored original game state: Steam title and description. Unsaved edits cleared.',setNotice,true);
     }catch(e){notify('Could not restore original game state: '+String(e?.message||e),setNotice);}
     finally{setWorking(false)}
@@ -7465,7 +7545,7 @@ function Manager(){
           h('div',{className:'td-saved-description-heading'},
             'Saved description · '+savedDescriptionPreview(state.descriptions[selected]).length+' characters'),
           h('div',{className:'td-saved-description-excerpt'},
-            savedDescriptionPreview(state.descriptions[selected]).excerpt),
+            savedDescriptionPreview(descriptionPlainText(state.descriptions[selected],isMarkdownDescription(state,selected))).excerpt),
           h('div',{className:'td-saved-description-hint'},
             'Full text is preserved. Use Edit description or Restore Steam description above.')):null)));
     bottom=footer(contextEntryActive.current?'A: select  •  Tap B/Circle: All games  •  Hold B/Circle: Steam':'A: select an action  •  B: return to library',state.enabled?'Steam title replacement ON':'Display replacement paused');
@@ -7475,7 +7555,9 @@ function Manager(){
     const descNav=(key,e)=>{
       const d=dir(e),dest={
         'description-back':{10:'description-open',12:'description-save'},
-        'description-open':{9:'description-back',10:'description-input',12:'description-save'},
+        'description-open':{9:'description-back',10:'description-input',12:'description-format'},
+        'description-format':{9:'description-save',10:'description-input',11:'description-open',12:'description-file'},
+        'description-file':{9:'description-restore',10:'description-input',11:'description-format'},
         'description-input':{9:'description-open',10:'description-save'},
         'description-save':{9:'description-open',12:'description-restore',11:'description-back'},
         'description-restore':{11:'description-save',12:'description-bottom',9:'description-open'},
@@ -7497,18 +7579,27 @@ function Manager(){
     workspace=h('div',{className:'td-workspace','data-td-description-workspace':'true'},h('div',{className:'td-card td-game-editor-card',style:{maxWidth:900,margin:'0 auto',paddingBottom:28}},
       h('div',{className:'td-copy-label'},'DESCRIPTION FOR '+(aliases[selected]||original||selected)),
       h('p',{className:'td-editor-note'},nonSteamEdit?'Customize this non-Steam shortcut locally. In Game Info, your artwork appears beside the description and the right stick scrolls longer text. Original Steam metadata remains unchanged.':'Customize the description displayed locally on the matching Steam game page. Longer descriptions can be scrolled with the right stick. Original Steam metadata stays unchanged.'),
-      h(UI.Focusable,{'flow-children':'down'},h(Btn,{'data-td-focus':'description-open',nav:e=>descNav('description-open',e),onClick:openDescriptionTyping},'⌨ Edit description using Steam keyboard')),
+      h(UI.Focusable,{'flow-children':'right',className:'td-actions'},
+        h(Btn,{'data-td-focus':'description-open',nav:e=>descNav('description-open',e),onClick:openDescriptionTyping},'⌨ Edit description using Steam keyboard'),
+        h(Btn,{'data-td-focus':'description-format',nav:e=>descNav('description-format',e),disabled:working,
+          onClick:()=>setDescriptionMarkdown(!descriptionMarkdown)},descriptionMarkdown?'Format: Markdown':'Format: Plain text'),
+        h(Btn,{'data-td-focus':'description-file',nav:e=>descNav('description-file',e),disabled:working,
+          onClick:()=>descriptionFile.current?.click()},'Open .md file')),
+      h('input',{type:'file',accept:'.md,text/markdown',hidden:true,key:selected,ref:descriptionFile,onChange:readDescriptionFile}),
       h('div',{'data-td-focus':'description-input',className:'td-description-native-input',
         onGamepadDirection:e=>descNav('description-input',e)},
         h(InlineGameNameField,{value:descriptionDraft,setValue:setDescriptionDraft,
           label:'Custom game description',
           placeholder:'Write your custom description…',fieldKind:'description',nonSteamDescription:nonSteamEdit,finishFocus:'description-save',
           onEnter:()=>focusQuery(root.current,'[data-td-focus="description-save"]',70)})),
-      h('div',{className:'td-editor-note',style:{whiteSpace:'pre-wrap',overflowWrap:'anywhere',minHeight:85,
+      h('div',{className:'td-editor-note',style:{whiteSpace:descriptionMarkdown?'normal':'pre-wrap',overflowWrap:'anywhere',minHeight:85,
         maxHeight:160,overflowY:'auto',padding:'14px 16px',borderRadius:10,background:'#172234',border:'1px solid #43566e'}},
-        descriptionDraft||'Your custom description preview will appear here.'),
+        descriptionDraft?(descriptionMarkdown?markdownPreview(descriptionDraft,h,(href,children,key)=>h('a',{
+          key,href,target:'_blank',rel:'noopener noreferrer',style:{color:'inherit',textDecoration:'underline'},
+          onClick:event=>{if(openDescriptionLink(href))event.preventDefault();}
+        },...children)):descriptionDraft):'Your custom description preview will appear here.'),
       h('div',{className:'td-editor-original-meta'},nonSteamEdit?'Non-Steam Game Info: artwork on the left, text on the right · Full descriptions remain saved · Scroll with the right stick · Save and Restore are above':'Full descriptions remain saved · Scroll with the right stick · Save and Restore are above'),
-      stored?h('div',{className:'td-editor-note',style:{whiteSpace:'pre-wrap',overflowWrap:'anywhere',maxHeight:150,overflowY:'auto',marginTop:15}},'Saved local description: '+stored):null
+      stored?h('div',{className:'td-editor-note',style:{whiteSpace:'pre-wrap',overflowWrap:'anywhere',maxHeight:150,overflowY:'auto',marginTop:15}},'Saved local description: '+descriptionPlainText(stored,isMarkdownDescription(state,selected))):null
     ));
     bottom=footer(contextEntryActive.current?'A: edit or save  •  B: back  •  Hold B/Circle: Steam':'A: edit or save  •  B: return to game editor','Shown on matching Steam game detail pages');
   }else if(view==='keyboard'||view==='search'||view==='appid'){

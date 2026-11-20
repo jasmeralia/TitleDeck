@@ -5,17 +5,19 @@ const path = require('node:path');
 const root = path.resolve(__dirname, '..');
 const read = f => fs.readFileSync(path.join(root,f),'utf8');
 const source = read('src/index.js');
-test('all public version declarations are 1.4.0', () => {
+test('installed and source declarations match the development version', () => {
   const p = JSON.parse(read('package.json'));
   const m = JSON.parse(read('plugin.json'));
-  assert.equal(p.version,'1.4.0');
-  assert.equal(m.version,'1.4.0');
+  assert.equal(p.version,m.version);
   assert.equal(m.name,'TitleDeck');
   assert.equal(m.api_version,1);
-  assert.match(source,/PLUGIN_VERSION\s*=\s*'1\.4\.0'/);
+  assert(source.includes(`PLUGIN_VERSION = '${p.version}'`));
 });
-test('published direct frontend module is identical to source', () =>
-  assert.equal(read('src/index.js'),read('dist/index.js')));
+test('the installed frontend loads without external dependencies', async () => {
+  const runtime = await import('../dist/index.js');
+  assert.equal(typeof runtime.default, 'function');
+  assert.equal(typeof runtime.createNonSteamGameInfoAdapter, 'function');
+});
 test('Art Hero customization is described as read-only', () => {
   const doc=read('docs/ART_HERO_COMPATIBILITY.md');
   assert.match(doc,/read.only/i);

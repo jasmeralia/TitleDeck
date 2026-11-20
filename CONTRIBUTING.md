@@ -9,9 +9,10 @@ Use [TitleDeck 1.4.0](https://github.com/ValentineBSAA/TitleDeck/releases/tag/1.
 If TitleDeck works well on your Deck, **that is useful feedback too**. [Share a screenshot, describe your setup, or tell us what you enjoy](docs/FEEDBACK.md) in [GitHub Discussions](https://github.com/ValentineBSAA/TitleDeck/discussions). Ideas and questions are welcome; use [Issues](https://github.com/ValentineBSAA/TitleDeck/issues/new/choose) for reproducible bugs and focused feature requests. Avoid posting personal account information or private library details.
 
 ## Source and tests
-The public `main` branch now contains the **exact installed 1.4.0 backend/frontend and theme assets**, synchronized from the SHA-256 verified official installer. Run:
+The `1.4.0` tag contains the exact installed backend, frontend, and theme assets for that release. To check current development changes, run:
 
 ```bash
+npm ci
 npm run version:check
 npm test
 python3 -m unittest discover -s tests -p 'test_*.py'

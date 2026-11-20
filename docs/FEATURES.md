@@ -2,7 +2,7 @@
 [← Home](../README.md) · [Beginner guide](BEGINNER_GUIDE.md) · [Screenshots](SCREENSHOTS.md) · [Upgrade comparison](UPDATE_FROM_1.2.2.md)
 
 ## Library titles and descriptions
-TitleDeck lets you give Steam and non-Steam games locally displayed titles and custom Game Info descriptions without changing installed game files or the original Steam metadata. Restore originals when you want. A native game Options shortcut can open the relevant editor directly.
+TitleDeck lets you give Steam and non-Steam games locally displayed titles and custom Game Info descriptions without changing installed game files or the original Steam metadata. Restore originals when you want. A native game Options shortcut can open the relevant editor directly. Descriptions can opt into [Markdown formatting](DESCRIPTION_MARKDOWN.md).
 
 ## Full Library Manager
 Browse Steam and non-Steam games, search by name or App ID, filter entries and edit their labels or descriptions in one place. The 1.4.0 interface has improved artwork placeholders/transitions, more consistent tab layout, controller navigation and LB/RB movement. Advanced and recovery options help locate hidden entries and undo local changes.

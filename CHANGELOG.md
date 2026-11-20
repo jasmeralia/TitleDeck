@@ -1,5 +1,9 @@
 # TitleDeck changelog
 
+## 1.5.0-beta.1 — Markdown descriptions
+
+Custom game descriptions can opt into Markdown for emphasis, underlining, strikethrough, lists and links. The editor previews the result and can load a Markdown file when the operating system provides a file picker. JSON settings and backups preserve each description's format. See the [Markdown descriptions guide](docs/DESCRIPTION_MARKDOWN.md).
+
 ## 1.4.0 — Published stable release (November 7, 2026)
 
 **A substantial upgrade from public 1.2.2.** Refined Full Library Manager and artwork loading; reorganized Settings and controller navigation; expanded color controls into a Typography Studio with ten font-style treatments, shadows, outlines, glow and contrast guidance; refined Quick Access presentation.

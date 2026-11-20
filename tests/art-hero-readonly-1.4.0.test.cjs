@@ -42,8 +42,8 @@ test('Art Hero legacy adapters only dispatch read-only get_themes',()=>{
 test('release manifests match and Settings focus preservation exists',()=>{
   const pkg=JSON.parse(fs.readFileSync(path.join(root,'package.json'),'utf8'));
   const plugin=JSON.parse(fs.readFileSync(path.join(root,'plugin.json'),'utf8'));
-  assert.equal(pkg.version,'1.4.0');assert.equal(plugin.version,'1.4.0');
-  assert.equal(pkg.license,'MIT');assert.equal(src,fs.readFileSync(path.join(root,'dist/index.js'),'utf8'));
+  assert.equal(pkg.version,plugin.version);
+  assert.equal(pkg.license,'MIT');
   assert.match(src,/focused===button&&scroller\.contains\(button\)/);
   assert.match(src,/if\(destination&&focusNode\(destination\)\)/);
 });
