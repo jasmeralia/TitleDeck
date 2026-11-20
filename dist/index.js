@@ -80,8 +80,10 @@ var titleDeckMarkdown = (() => {
   // src/description-markdown.js
   var description_markdown_exports = {};
   __export(description_markdown_exports, {
+    cleanupDescriptionMedia: () => cleanupDescriptionMedia,
     clearDescriptionLinkNavigation: () => clearDescriptionLinkNavigation,
     descriptionLink: () => descriptionLink,
+    descriptionMedia: () => descriptionMedia,
     descriptionPlainText: () => descriptionPlainText,
     markdownPreview: () => markdownPreview,
     paintDescription: () => paintDescription,
@@ -1869,12 +1871,29 @@ Please report this to https://github.com/markedjs/marked.`, e) {
   });
   var inlineTags = { strong: "strong", em: "em", underline: "u", del: "del" };
   var node = (tag, children = [], attributes = {}) => ({ tag, children, attributes });
+  var mediaHosts = {
+    image: /* @__PURE__ */ new Set(["img.itch.zone", "cdn.imgchest.com", "cdn.akamai.steamstatic.com", "shared.akamai.steamstatic.com", "shared.cloudflare.steamstatic.com", "steamcdn-a.akamaihd.net", "steamcommunity-a.akamaihd.net", "steamstore-a.akamaihd.net"]),
+    video: /* @__PURE__ */ new Set(["cdn.akamai.steamstatic.com", "shared.akamai.steamstatic.com", "video.akamai.steamstatic.com", "cdn.steamusercontent.com", "steamusercontent-a.akamaihd.net", "steamcdn-a.akamaihd.net", "steamcommunity-a.akamaihd.net", "steamstore-a.akamaihd.net"])
+  };
   function descriptionLink(raw) {
     const href = decodeHTML(String(raw ?? ""));
     if (!/^https:\/\//i.test(href) || /[\s\\]/u.test(href)) return null;
     try {
       const url = new URL(href);
       return url.protocol === "https:" && !url.username && !url.password ? url.href : null;
+    } catch {
+      return null;
+    }
+  }
+  function descriptionMedia(raw, kind) {
+    const href = descriptionLink(raw);
+    if (!href || !mediaHosts[kind]) return null;
+    try {
+      const url = new URL(href);
+      if (url.port || !mediaHosts[kind].has(url.hostname.toLowerCase())) return null;
+      if (kind === "video" && !/\.(?:webm|mp4)$/i.test(url.pathname)) return null;
+      if (kind === "image" && !/\.(?:avif|gif|jpe?g|png|webp)$/i.test(url.pathname)) return null;
+      return url.href;
     } catch {
       return null;
     }
@@ -1890,6 +1909,8 @@ Please report this to https://github.com/markedjs/marked.`, e) {
           return [];
         case "paragraph":
           return [node("p", children())];
+        case "heading":
+          return [node(`h${token.depth}`, children())];
         case "br":
           return [node("br")];
         case "text":
@@ -1904,8 +1925,13 @@ Please report this to https://github.com/markedjs/marked.`, e) {
           const href = descriptionLink(token.href);
           return href ? [node("a", children(), { href, rel: "noopener noreferrer", target: "_blank" })] : children();
         }
-        case "image":
-          return [decodeHTML(token.text ?? "")];
+        case "image": {
+          const label = decodeHTML(token.text ?? "");
+          const videoLabel = /^video:\s*(.+)$/i.exec(label);
+          const kind = videoLabel ? "video" : "image";
+          const src = descriptionMedia(token.href, kind);
+          return src ? [node("media", [], { kind, src, label: videoLabel?.[1] || label || "Image" })] : [label];
+        }
         case "html":
           return [token.raw];
         default:
@@ -1918,7 +1944,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
     if (cache.has(text)) return cache.get(text);
     let result;
     try {
-      result = text.length > 1e5 ? [text] : describeTokens(parser.lexer(text));
+      result = text.length > 1e5 ? [text] : describeTokens(parser.lexer(text.replace(/\*\*(?=\S)([^*\n]*\S)[ \t]+\*\*(?=\S)/g, "**$1** ")));
     } catch {
       result = [text];
     }
@@ -1932,11 +1958,12 @@ Please report this to https://github.com/markedjs/marked.`, e) {
     if (!markdown) return text;
     const flatten = (item) => {
       if (typeof item === "string") return item;
+      if (item.tag === "media") return item.attributes.label;
       if (item.tag === "br") return "\n";
       const contents = item.children.map(flatten).join("");
       if (item.tag === "li") return `\u2022 ${contents}
 `;
-      return contents + (["p", "ol", "ul"].includes(item.tag) ? "\n" : "");
+      return contents + (["p", "ol", "ul", "h1", "h2", "h3", "h4", "h5", "h6"].includes(item.tag) ? "\n" : "");
     };
     return parseDescriptionMarkdown(text).map(flatten).join("").trim();
   }
@@ -1944,6 +1971,18 @@ Please report this to https://github.com/markedjs/marked.`, e) {
     switch (tag) {
       case "p":
         return { margin: "0 0 .65em" };
+      case "h1":
+        return { margin: ".7em 0 .4em", fontSize: "1.55em", fontWeight: 750, lineHeight: 1.2 };
+      case "h2":
+        return { margin: ".7em 0 .4em", fontSize: "1.4em", fontWeight: 750, lineHeight: 1.25 };
+      case "h3":
+        return { margin: ".65em 0 .35em", fontSize: "1.25em", fontWeight: 700, lineHeight: 1.3 };
+      case "h4":
+        return { margin: ".6em 0 .3em", fontSize: "1.12em", fontWeight: 700 };
+      case "h5":
+        return { margin: ".55em 0 .3em", fontSize: "1.05em", fontWeight: 700 };
+      case "h6":
+        return { margin: ".5em 0 .25em", fontSize: "1em", fontWeight: 700 };
       case "ul":
         return { margin: "0 0 .65em", paddingInlineStart: "1.5em", listStyleType: "disc" };
       case "ol":
@@ -1961,21 +2000,84 @@ Please report this to https://github.com/markedjs/marked.`, e) {
       if (typeof item === "string") return item;
       const children = item.children.map(render);
       if (item.tag === "a") return link(item.attributes.href, children, key);
+      if (item.tag === "media") {
+        const { kind, src, label } = item.attributes;
+        const props = { key, "data-titledeck-description-media": "", style: { display: "block", maxWidth: "100%", maxHeight: "60vh", margin: ".7em 0" } };
+        if (kind === "image") return h2("img", { ...props, src, alt: label, loading: "lazy", decoding: "async" });
+        return h2("video", { ...props, src, controls: true, preload: "metadata", playsInline: true, "aria-label": label });
+      }
       return h2(item.tag, { ...item.attributes, key, style: nodeStyle(item.tag) }, ...children);
     };
     return parseDescriptionMarkdown(text).map(render);
   }
   var rendered = /* @__PURE__ */ new WeakMap();
-  function paintDescription(body, text, markdown, openLink) {
+  function cleanupDescriptionMedia(root) {
+    if (!root?.querySelectorAll) return;
+    for (const media of root.querySelectorAll("img[data-titledeck-description-media],video[data-titledeck-description-media]")) {
+      try {
+        media.pause?.();
+      } catch {
+      }
+      media.removeAttribute("src");
+      try {
+        media.load?.();
+      } catch {
+      }
+    }
+  }
+  function paintDescription(body, text, markdown, openLink, scope = "") {
     if (!body) return;
     const previous = rendered.get(body);
-    if (previous?.text === text && previous?.markdown === markdown && body.firstChild === previous.first) return;
+    if (previous?.text === text && previous?.markdown === markdown && previous?.scope === scope && body.firstChild === previous.first) return;
     if (!markdown) {
+      cleanupDescriptionMedia(body);
       if (body.textContent !== text || previous?.markdown) body.textContent = text;
     } else {
       const doc = body.ownerDocument;
       const create = (item) => {
         if (typeof item === "string") return doc.createTextNode(item);
+        if (item.tag === "media") {
+          const { kind, src, label } = item.attributes;
+          const box = doc.createElement("div");
+          box.setAttribute("data-titledeck-description-media", kind);
+          box.style.cssText = "margin:.7em 0;max-width:100%;";
+          if (kind === "image") {
+            const img = doc.createElement("img");
+            img.alt = label;
+            img.loading = "lazy";
+            img.decoding = "async";
+            img.style.cssText = "display:block;max-width:100%;max-height:60vh;object-fit:contain;";
+            img.setAttribute("data-titledeck-description-media", "");
+            img.addEventListener("error", () => {
+              img.remove();
+              failureLink(box, src, label, doc, openLink);
+            }, { once: true });
+            img.src = src;
+            box.appendChild(img);
+            return box;
+          }
+          const video = doc.createElement("video");
+          video.controls = true;
+          video.preload = "metadata";
+          video.playsInline = true;
+          video.tabIndex = 0;
+          video.setAttribute("aria-label", label);
+          video.setAttribute("data-titledeck-description-focus", "");
+          video.setAttribute("data-titledeck-description-focus-label", "Play or pause video");
+          video.style.cssText = "display:block;width:100%;max-width:720px;max-height:60vh;";
+          video.setAttribute("data-titledeck-description-media", "");
+          video.addEventListener("error", () => failureLink(box, src, label, doc, openLink), { once: true });
+          video.addEventListener("vgp_onbuttondown", (event) => {
+            if (event.detail?.button !== 1 || event.detail?.is_repeat) return;
+            event.preventDefault();
+            event.stopPropagation();
+            if (video.paused) video.play().catch(() => failureLink(box, src, label, doc, openLink));
+            else video.pause();
+          });
+          video.src = src;
+          box.appendChild(video);
+          return box;
+        }
         const element = doc.createElement(item.tag);
         for (const [name, value] of Object.entries(item.attributes)) element.setAttribute(name, value);
         Object.assign(element.style, nodeStyle(item.tag));
@@ -1997,9 +2099,27 @@ Please report this to https://github.com/markedjs/marked.`, e) {
       };
       const fragment = doc.createDocumentFragment();
       for (const item of parseDescriptionMarkdown(text)) fragment.appendChild(create(item));
+      cleanupDescriptionMedia(body);
       body.replaceChildren(fragment);
     }
-    rendered.set(body, { text, markdown, first: body.firstChild });
+    rendered.set(body, { text, markdown, scope, first: body.firstChild });
+  }
+  function failureLink(box, src, label, doc, openLink) {
+    if (box.querySelector("[data-titledeck-description-media-fallback]")) return;
+    const fallback = doc.createElement("button");
+    fallback.type = "button";
+    fallback.textContent = `Media unavailable \xB7 Open ${label}`;
+    fallback.setAttribute("data-titledeck-description-media-fallback", "");
+    fallback.setAttribute("data-titledeck-description-focus", "");
+    fallback.setAttribute("data-titledeck-description-focus-label", "Open media externally");
+    fallback.addEventListener("click", () => openLink(src));
+    fallback.addEventListener("vgp_onbuttondown", (event) => {
+      if (event.detail?.button !== 1 || event.detail?.is_repeat) return;
+      event.preventDefault();
+      event.stopPropagation();
+      fallback.click();
+    });
+    box.appendChild(fallback);
   }
   var navigation = /* @__PURE__ */ new WeakMap();
   function clearDescriptionLinkNavigation(panel) {
@@ -2014,7 +2134,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
     }
   }
   function updateDescriptionLinkNavigation(panel, trees) {
-    const links = [...panel?.querySelectorAll?.("[data-titledeck-description-link]") ?? []];
+    const links = [...panel?.querySelectorAll?.("[data-titledeck-description-link],[data-titledeck-description-focus]") ?? []];
     const current = navigation.get(panel);
     if (current?.nodes.length === links.length && links.every((link, i) => link === current.links[i]) && current.parent.Element?.isConnected) return;
     clearDescriptionLinkNavigation(panel);
@@ -2044,7 +2164,11 @@ Please report this to https://github.com/markedjs/marked.`, e) {
       for (const link of links) {
         const child = parent.Tree.CreateNode(parent, void 0);
         entry.nodes.push(child);
-        child.SetProperties({ focusable: true, noFocusRing: true, onOKActionDescription: "Open link" });
+        child.SetProperties({
+          focusable: true,
+          noFocusRing: true,
+          onOKActionDescription: link.hasAttribute?.("data-titledeck-description-link") ? "Open link" : link.getAttribute?.("data-titledeck-description-focus-label") || "Open media externally"
+        });
         child.OnMount(link);
       }
     } catch {
@@ -2054,7 +2178,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
   return __toCommonJS(description_markdown_exports);
 })();
 
-const { clearDescriptionLinkNavigation, descriptionPlainText, markdownPreview, paintDescription,
+const { cleanupDescriptionMedia, clearDescriptionLinkNavigation, descriptionPlainText, markdownPreview, paintDescription,
   updateDescriptionLinkNavigation } = titleDeckMarkdown;
 
 /** TitleDeck: source frontend for the Decky Quick Menu, Full Library Manager and Steam Home integration. */
@@ -5145,11 +5269,11 @@ export function createNonSteamGameInfoAdapter(host,getState,getDocuments=()=>[],
       panel.style.fontSize=record.nativeFont;
       panel.style.lineHeight=record.nativeLine;
       const body=doc.createElement('div');
-      paintDescription(body,text,true,url=>openDescriptionLink(url,doc.defaultView));
+      paintDescription(body,text,true,url=>openDescriptionLink(url,doc.defaultView),record.appid);
       panel.appendChild(body);
       parent.insertBefore(panel,message);
       record.richPanel=panel;
-    }else paintDescription(record.richPanel.firstChild,text,true,url=>openDescriptionLink(url,doc.defaultView));
+    }else paintDescription(record.richPanel.firstChild,text,true,url=>openDescriptionLink(url,doc.defaultView),record.appid);
     if(message.style.getPropertyValue('display')!=='none'||message.style.getPropertyPriority('display')!=='important')
       message.style.setProperty('display','none','important');
     if(updatePlainText)registerDescriptionLinks(record.richPanel);
@@ -5253,7 +5377,7 @@ export function createNonSteamGameInfoAdapter(host,getState,getDocuments=()=>[],
     for(const [name,style] of Object.entries(originalMessageStyle))
       restoreInlineStyle(message,name,style);
     restoreGrid(record);
-    if(record.richPanel){clearDescriptionLinkNavigation(record.richPanel);record.richPanel.remove();}
+    if(record.richPanel){clearDescriptionLinkNavigation(record.richPanel);cleanupDescriptionMedia(record.richPanel);record.richPanel.remove();}
     current.delete(doc);
   }
   // Stable, in-flow layout: Never make the React-owned description absolute.
@@ -5775,7 +5899,7 @@ export function createNonSteamGameInfoAdapter(host,getState,getDocuments=()=>[],
         if(!markdown&&message.textContent===text)replaceText(message,newRecord.originalText);
         for(const [name,style] of Object.entries(originalMessageStyle))restoreInlineStyle(message,name,style);
         restoreGrid(newRecord);
-        if(newRecord.richPanel){clearDescriptionLinkNavigation(newRecord.richPanel);newRecord.richPanel.remove();}
+        if(newRecord.richPanel){clearDescriptionLinkNavigation(newRecord.richPanel);cleanupDescriptionMedia(newRecord.richPanel);newRecord.richPanel.remove();}
         status='Native replacement unavailable; original fallback left visible';
       }
     }
@@ -6144,6 +6268,7 @@ export function createDescriptionAdapter(host,getState,getDocuments=()=>[],getCl
     }
     try{native?.removeAttribute?.('data-titledeck-native-original')}catch{}
     clearDescriptionLinkNavigation(prior.panel);
+    cleanupDescriptionMedia(prior.panel);
     try{prior.panel?.remove?.()}catch{}
     nativeInfo.delete(doc);
   }
@@ -6211,7 +6336,7 @@ export function createDescriptionAdapter(host,getState,getDocuments=()=>[],getCl
         typeof nativeDescription.className==='string')panel.className=nativeDescription.className;
       // Populate BEFORE the panel is connected or Steam's original text hidden.
       const body=panel.querySelector?.('[data-titledeck-gameinfo-text]')||panel.lastChild;
-      paintDescription(body,description,markdown,url=>openDescriptionLink(url,doc.defaultView));
+      paintDescription(body,description,markdown,url=>openDescriptionLink(url,doc.defaultView),appid);
       const style=nativeDescription?.style;
       const originalDisplay=style?.display??'';
       const originalDisplayProperty=typeof style?.getPropertyValue==='function'?style.getPropertyValue('display'):null;
@@ -6230,7 +6355,7 @@ export function createDescriptionAdapter(host,getState,getDocuments=()=>[],getCl
       prior.nativeNode.style.setProperty('display','none','important');
     }
     const body=prior.panel.querySelector?.('[data-titledeck-gameinfo-text]')||prior.panel.lastChild;
-    paintDescription(body,description,markdown,url=>openDescriptionLink(url,doc.defaultView));
+    paintDescription(body,description,markdown,url=>openDescriptionLink(url,doc.defaultView),appid);
     if(markdown)registerDescriptionLinks(prior.panel);
     status='Game Info: native-styled description active for app '+appid;
     return true;
@@ -6243,7 +6368,7 @@ export function createDescriptionAdapter(host,getState,getDocuments=()=>[],getCl
     return [...result];
   }
   function clear(doc){
-    const old=owned.get(doc);if(old){clearDescriptionLinkNavigation(old);old.remove?.();owned.delete(doc)}
+    const old=owned.get(doc);if(old){clearDescriptionLinkNavigation(old);cleanupDescriptionMedia(old);old.remove?.();owned.delete(doc)}
     try{for(const el of doc.querySelectorAll('['+MARK+']'))if(el.getAttribute?.(MARK))el.remove?.()}catch{}
   }
   function routeId(doc){
@@ -6266,7 +6391,7 @@ export function createDescriptionAdapter(host,getState,getDocuments=()=>[],getCl
   function draw(doc,target,id,description,position='below_play') {
     const parent=target.parentElement;if(!parent)return false;
     let pane=owned.get(doc);
-    if(pane&&!pane.isConnected){clearDescriptionLinkNavigation(pane);owned.delete(doc);pane=null}
+    if(pane&&!pane.isConnected){clearDescriptionLinkNavigation(pane);cleanupDescriptionMedia(pane);owned.delete(doc);pane=null}
     if(pane?.getAttribute?.(MARK)!==id){clear(doc);pane=null}
     if(!pane){
       pane=doc.createElement('section');pane.setAttribute(MARK,id);
@@ -6323,7 +6448,7 @@ export function createDescriptionAdapter(host,getState,getDocuments=()=>[],getCl
       const markdown=isMarkdownDescription(getState(),id);
       const rich=markdown&&layout!=='hero_footer';
       const text=rich?description:descriptionPlainText(description,markdown);
-      paintDescription(body,text,rich,url=>openDescriptionLink(url,doc.defaultView));
+      paintDescription(body,text,rich,url=>openDescriptionLink(url,doc.defaultView),id);
       if(rich)registerDescriptionLinks(pane);
       else clearDescriptionLinkNavigation(pane);
       const textStyle=layout==='hero_footer'

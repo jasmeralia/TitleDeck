@@ -8,11 +8,16 @@ Open a game in the TitleDeck Library Manager, choose **Edit description**, and s
 | Italics | `*Optional*` |
 | Underline | `++Underline++` |
 | Strikethrough | `~~Outdated~~` |
+| Heading | `## About the game` (levels 1–6) |
 | Numbered list | `1. First step`, then `2. Second step` on the next line |
 | Bulleted list | `- Item` on each line |
 | Link | `[Walkthrough](https://example.com/guide)` |
+| Image | `![Screenshot](https://img.itch.zone/path/screenshot.png)` |
+| Video | `![video: Trailer](https://cdn.akamai.steamstatic.com/steam/apps/123/movie.mp4)` |
 
-Leave a blank line between paragraphs and before lists. Underline is a TitleDeck extension. Links accept absolute HTTPS URLs. Game Info and Below Play show formatting. Artwork Footer shows a compact plain text excerpt. HTML is displayed as text, and image syntax shows its alt text without loading the image.
+Leave a blank line between paragraphs and before lists. Underline is a TitleDeck extension. Links accept absolute HTTPS URLs and open externally. Images and direct MP4/WebM clips are supported only from TitleDeck's approved HTTPS media hosts (currently `img.itch.zone`, `cdn.imgchest.com`, and selected Steam CDN hosts). Custom ports, credentials, local paths, other hosts, and unsupported file types are rejected and shown as readable labels. YouTube links remain ordinary external links.
+
+Images display inline with bounded dimensions and alt text. Videos display inline with controls and never autoplay; playback starts only when the user activates the video controls. Media unloads when its description is replaced or its panel is removed. If loading or playback fails, use the displayed external link. Game Info and Below Play show media; Artwork Footer and saved-description summaries show compact text only. HTML is displayed as text. Inline media behavior and host policy are a proposed upstream contribution and may change after maintainer review and Steam Deck verification.
 
 ## JSON compatibility
 

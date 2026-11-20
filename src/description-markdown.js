@@ -19,6 +19,13 @@ const parser = new Marked({
 const inlineTags = { strong: 'strong', em: 'em', underline: 'u', del: 'del' };
 const node = (tag, children = [], attributes = {}) => ({ tag, children, attributes });
 
+// Keep the media policy deliberately small. Media URLs are checked before
+// they reach an element that can fetch them, and custom ports are not allowed.
+const mediaHosts = {
+  image: new Set(['img.itch.zone', 'cdn.imgchest.com', 'cdn.akamai.steamstatic.com', 'shared.akamai.steamstatic.com', 'shared.cloudflare.steamstatic.com', 'steamcdn-a.akamaihd.net', 'steamcommunity-a.akamaihd.net', 'steamstore-a.akamaihd.net']),
+  video: new Set(['cdn.akamai.steamstatic.com', 'shared.akamai.steamstatic.com', 'video.akamai.steamstatic.com', 'cdn.steamusercontent.com', 'steamusercontent-a.akamaihd.net', 'steamcdn-a.akamaihd.net', 'steamcommunity-a.akamaihd.net', 'steamstore-a.akamaihd.net']),
+};
+
 export function descriptionLink(raw) {
   const href = decodeHTML(String(raw ?? ''));
   if (!/^https:\/\//i.test(href) || /[\s\\]/u.test(href)) return null;
@@ -30,8 +37,22 @@ export function descriptionLink(raw) {
   }
 }
 
+export function descriptionMedia(raw, kind) {
+  const href = descriptionLink(raw);
+  if (!href || !mediaHosts[kind]) return null;
+  try {
+    const url = new URL(href);
+    if (url.port || !mediaHosts[kind].has(url.hostname.toLowerCase())) return null;
+    if (kind === 'video' && !/\.(?:webm|mp4)$/i.test(url.pathname)) return null;
+    if (kind === 'image' && !/\.(?:avif|gif|jpe?g|png|webp)$/i.test(url.pathname)) return null;
+    return url.href;
+  } catch {
+    return null;
+  }
+}
+
 // Only renderer-owned tags and attributes reach the DOM. HTML and unsupported
-// markup become text, and media never creates a resource-loading element.
+// markup become text; validated media is inserted as native media elements.
 function describeTokens(tokens, depth = 0) {
   return tokens.flatMap(token => {
     if (depth >= 48) return [token.raw ?? ''];
@@ -41,6 +62,7 @@ function describeTokens(tokens, depth = 0) {
       case 'space':
       case 'def': return [];
       case 'paragraph': return [node('p', children())];
+      case 'heading': return [node(`h${token.depth}`, children())];
       case 'br': return [node('br')];
       case 'text': return token.tokens ? children() : [decodeHTML(token.text)];
       case 'escape': return [token.text];
@@ -52,7 +74,13 @@ function describeTokens(tokens, depth = 0) {
         const href = descriptionLink(token.href);
         return href ? [node('a', children(), { href, rel: 'noopener noreferrer', target: '_blank' })] : children();
       }
-      case 'image': return [decodeHTML(token.text ?? '')];
+      case 'image': {
+        const label = decodeHTML(token.text ?? '');
+        const videoLabel = /^video:\s*(.+)$/i.exec(label);
+        const kind = videoLabel ? 'video' : 'image';
+        const src = descriptionMedia(token.href, kind);
+        return src ? [node('media', [], { kind, src, label: videoLabel?.[1] || label || 'Image' })] : [label];
+      }
       case 'html': return [token.raw];
       default: return [token.raw ?? token.text ?? ''];
     }
@@ -66,7 +94,9 @@ export function parseDescriptionMarkdown(text) {
   if (cache.has(text)) return cache.get(text);
   let result;
   try {
-    result = text.length > 100_000 ? [text] : describeTokens(parser.lexer(text));
+    result = text.length > 100_000
+      ? [text]
+      : describeTokens(parser.lexer(text.replace(/\*\*(?=\S)([^*\n]*\S)[ \t]+\*\*(?=\S)/g, '**$1** ')));
   } catch {
     result = [text];
   }
@@ -81,10 +111,11 @@ export function descriptionPlainText(text, markdown) {
   if (!markdown) return text;
   const flatten = item => {
     if (typeof item === 'string') return item;
+    if (item.tag === 'media') return item.attributes.label;
     if (item.tag === 'br') return '\n';
     const contents = item.children.map(flatten).join('');
     if (item.tag === 'li') return `• ${contents}\n`;
-    return contents + (['p', 'ol', 'ul'].includes(item.tag) ? '\n' : '');
+    return contents + (['p', 'ol', 'ul', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'].includes(item.tag) ? '\n' : '');
   };
   return parseDescriptionMarkdown(text).map(flatten).join('').trim();
 }
@@ -92,6 +123,12 @@ export function descriptionPlainText(text, markdown) {
 function nodeStyle(tag) {
   switch (tag) {
     case 'p': return { margin: '0 0 .65em' };
+    case 'h1': return { margin: '.7em 0 .4em', fontSize: '1.55em', fontWeight: 750, lineHeight: 1.2 };
+    case 'h2': return { margin: '.7em 0 .4em', fontSize: '1.4em', fontWeight: 750, lineHeight: 1.25 };
+    case 'h3': return { margin: '.65em 0 .35em', fontSize: '1.25em', fontWeight: 700, lineHeight: 1.3 };
+    case 'h4': return { margin: '.6em 0 .3em', fontSize: '1.12em', fontWeight: 700 };
+    case 'h5': return { margin: '.55em 0 .3em', fontSize: '1.05em', fontWeight: 700 };
+    case 'h6': return { margin: '.5em 0 .25em', fontSize: '1em', fontWeight: 700 };
     case 'ul': return { margin: '0 0 .65em', paddingInlineStart: '1.5em', listStyleType: 'disc' };
     case 'ol': return { margin: '0 0 .65em', paddingInlineStart: '1.5em', listStyleType: 'decimal' };
     case 'li': return { display: 'list-item' };
@@ -105,22 +142,80 @@ export function markdownPreview(text, h, link) {
     if (typeof item === 'string') return item;
     const children = item.children.map(render);
     if (item.tag === 'a') return link(item.attributes.href, children, key);
+    if (item.tag === 'media') {
+      const { kind, src, label } = item.attributes;
+      const props = { key, 'data-titledeck-description-media': '', style: { display: 'block', maxWidth: '100%', maxHeight: '60vh', margin: '.7em 0' } };
+      if (kind === 'image') return h('img', { ...props, src, alt: label, loading: 'lazy', decoding: 'async' });
+      return h('video', { ...props, src, controls: true, preload: 'metadata', playsInline: true, 'aria-label': label });
+    }
     return h(item.tag, { ...item.attributes, key, style: nodeStyle(item.tag) }, ...children);
   };
   return parseDescriptionMarkdown(text).map(render);
 }
 
 const rendered = new WeakMap();
-export function paintDescription(body, text, markdown, openLink) {
+export function cleanupDescriptionMedia(root) {
+  if (!root?.querySelectorAll) return;
+  for (const media of root.querySelectorAll('img[data-titledeck-description-media],video[data-titledeck-description-media]')) {
+    try { media.pause?.(); } catch { /* It may never have started. */ }
+    media.removeAttribute('src');
+    try { media.load?.(); } catch { /* Detached media elements may reject load. */ }
+  }
+}
+
+export function paintDescription(body, text, markdown, openLink, scope = '') {
   if (!body) return;
   const previous = rendered.get(body);
-  if (previous?.text === text && previous?.markdown === markdown && body.firstChild === previous.first) return;
+  if (previous?.text === text && previous?.markdown === markdown && previous?.scope === scope && body.firstChild === previous.first) return;
   if (!markdown) {
+    cleanupDescriptionMedia(body);
     if (body.textContent !== text || previous?.markdown) body.textContent = text;
   } else {
     const doc = body.ownerDocument;
     const create = item => {
       if (typeof item === 'string') return doc.createTextNode(item);
+      if (item.tag === 'media') {
+        const { kind, src, label } = item.attributes;
+        const box = doc.createElement('div');
+        box.setAttribute('data-titledeck-description-media', kind);
+        box.style.cssText = 'margin:.7em 0;max-width:100%;';
+        if (kind === 'image') {
+          const img = doc.createElement('img');
+          img.alt = label;
+          img.loading = 'lazy';
+          img.decoding = 'async';
+          img.style.cssText = 'display:block;max-width:100%;max-height:60vh;object-fit:contain;';
+          img.setAttribute('data-titledeck-description-media', '');
+          img.addEventListener('error', () => {
+            img.remove();
+            failureLink(box, src, label, doc, openLink);
+          }, { once: true });
+          img.src = src;
+          box.appendChild(img);
+          return box;
+        }
+        const video = doc.createElement('video');
+        video.controls = true;
+        video.preload = 'metadata';
+        video.playsInline = true;
+        video.tabIndex = 0;
+        video.setAttribute('aria-label', label);
+        video.setAttribute('data-titledeck-description-focus', '');
+        video.setAttribute('data-titledeck-description-focus-label', 'Play or pause video');
+        video.style.cssText = 'display:block;width:100%;max-width:720px;max-height:60vh;';
+        video.setAttribute('data-titledeck-description-media', '');
+        video.addEventListener('error', () => failureLink(box, src, label, doc, openLink), { once: true });
+        video.addEventListener('vgp_onbuttondown', event => {
+          if (event.detail?.button !== 1 || event.detail?.is_repeat) return;
+          event.preventDefault();
+          event.stopPropagation();
+          if (video.paused) video.play().catch(() => failureLink(box, src, label, doc, openLink));
+          else video.pause();
+        });
+        video.src = src;
+        box.appendChild(video);
+        return box;
+      }
       const element = doc.createElement(item.tag);
       for (const [name, value] of Object.entries(item.attributes)) element.setAttribute(name, value);
       Object.assign(element.style, nodeStyle(item.tag));
@@ -142,13 +237,30 @@ export function paintDescription(body, text, markdown, openLink) {
     };
     const fragment = doc.createDocumentFragment();
     for (const item of parseDescriptionMarkdown(text)) fragment.appendChild(create(item));
+    cleanupDescriptionMedia(body);
     body.replaceChildren(fragment);
   }
-  rendered.set(body, { text, markdown, first: body.firstChild });
+  rendered.set(body, { text, markdown, scope, first: body.firstChild });
+}
+
+function failureLink(box, src, label, doc, openLink) {
+  if (box.querySelector('[data-titledeck-description-media-fallback]')) return;
+  const fallback = doc.createElement('button');
+  fallback.type = 'button';
+  fallback.textContent = `Media unavailable · Open ${label}`;
+  fallback.setAttribute('data-titledeck-description-media-fallback', '');
+  fallback.setAttribute('data-titledeck-description-focus', '');
+  fallback.setAttribute('data-titledeck-description-focus-label', 'Open media externally');
+  fallback.addEventListener('click', () => openLink(src));
+  fallback.addEventListener('vgp_onbuttondown', event => {
+    if (event.detail?.button !== 1 || event.detail?.is_repeat) return;
+    event.preventDefault(); event.stopPropagation(); fallback.click();
+  });
+  box.appendChild(fallback);
 }
 
 // Steam's navigation tree knows about native focusable controls, but not DOM
-// siblings inserted by TitleDeck. Register only links in the active panel.
+// siblings inserted by TitleDeck. Register only links and media actions.
 const navigation = new WeakMap();
 export function clearDescriptionLinkNavigation(panel) {
   const entry = navigation.get(panel);
@@ -160,7 +272,7 @@ export function clearDescriptionLinkNavigation(panel) {
 }
 
 export function updateDescriptionLinkNavigation(panel, trees) {
-  const links = [...(panel?.querySelectorAll?.('[data-titledeck-description-link]') ?? [])];
+  const links = [...(panel?.querySelectorAll?.('[data-titledeck-description-link],[data-titledeck-description-focus]') ?? [])];
   const current = navigation.get(panel);
   if (current?.nodes.length === links.length &&
       links.every((link, i) => link === current.links[i]) && current.parent.Element?.isConnected) return;
@@ -193,7 +305,10 @@ export function updateDescriptionLinkNavigation(panel, trees) {
     for (const link of links) {
       const child = parent.Tree.CreateNode(parent, undefined);
       entry.nodes.push(child);
-      child.SetProperties({ focusable: true, noFocusRing: true, onOKActionDescription: 'Open link' });
+      child.SetProperties({ focusable: true, noFocusRing: true,
+        onOKActionDescription: link.hasAttribute?.('data-titledeck-description-link')
+          ? 'Open link'
+          : (link.getAttribute?.('data-titledeck-description-focus-label') || 'Open media externally') });
       child.OnMount(link);
     }
   } catch {
